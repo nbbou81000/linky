@@ -28,6 +28,12 @@ function dateFr(dateStr) {
   if (isNaN(d)) return dateStr;
   return `${d.getDate()} ${MOIS_FR[d.getMonth()]}`;
 }
+function dateDdMm(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+}
 function weekdayFr(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d)) return "";
@@ -139,6 +145,7 @@ async function main() {
   const dailySeries = dailyReadings.map((r) => ({
     date: r.date,
     date_fr: dateFr(r.date),
+    date_ddmm: dateDdMm(r.date),
     weekday_fr: weekdayFr(r.date),
     kwh: Math.round((parseFloat(r.value) / 1000) * 1000) / 1000,
   }));
