@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-01T21:02:18.639Z",
-  "generated_at_fr": "01/08 21h02",
+  "generated_at": "2026-08-01T21:24:54.160Z",
+  "generated_at_fr": "01/08 21h24",
   "pdl": "23252966652215",
   "contract": {
     "segment": "C5",
@@ -40,10 +40,12 @@
       "endMin": 1022
     }
   ],
-  "today": {
-    "date": "2026-08-01",
-    "date_fr": "1 août",
-    "kwh": 20.576
+  "last_known_day": {
+    "date": "2026-07-31",
+    "date_fr": "31 juil",
+    "weekday_fr": "ven",
+    "kwh": 20.576,
+    "lag_days": 1
   },
   "yesterday": {
     "kwh": 21.72
