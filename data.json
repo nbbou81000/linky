@@ -1,29 +1,213 @@
 {
-  "generated_at": "2026-08-01T19:31:50.627Z",
+  "generated_at": "2026-08-01T19:34:41.639Z",
   "pdl": "23252966652215",
-  "contract": null,
-  "identity": null,
-  "address": null,
+  "contract": {
+    "segment": "C5",
+    "subscribed_power": "9 kVA",
+    "last_activation_date": "2019-06-14+02:00",
+    "distribution_tariff": "BTINFMU4",
+    "offpeak_hours": "HC (1H02-6H02;14H02-17H02)",
+    "contract_status": "SERVC",
+    "last_distribution_tariff_change_date": "2024-05-19+02:00"
+  },
+  "identity": {
+    "customer_id": "-1066318669",
+    "identity": {
+      "natural_person": {
+        "title": "Mme",
+        "firstname": "Laurie",
+        "lastname": "TRUTINO"
+      }
+    }
+  },
+  "address": {
+    "street": "36 RUE DES GLAIEULS",
+    "locality": null,
+    "postal_code": "81130",
+    "insee_code": "81048",
+    "city": "CAGNAC LES MINES",
+    "country": "France",
+    "geo_points": {}
+  },
   "today": {
     "date": "2026-08-01",
-    "kwh": null
+    "kwh": 20.576
   },
   "yesterday": {
-    "kwh": null
+    "kwh": 21.72
   },
   "current_power_watts": null,
-  "peak_power": null,
+  "peak_power": {
+    "date": "2026-07-15 18:55:26",
+    "watts": 6330
+  },
   "week": {
-    "total_kwh": 0,
-    "avg_kwh_per_day": 0,
-    "series": []
+    "total_kwh": 131.37,
+    "avg_kwh_per_day": 18.77,
+    "series": [
+      {
+        "date": "2026-07-25",
+        "kwh": 18.369
+      },
+      {
+        "date": "2026-07-26",
+        "kwh": 12.395
+      },
+      {
+        "date": "2026-07-27",
+        "kwh": 16.498
+      },
+      {
+        "date": "2026-07-28",
+        "kwh": 16.563
+      },
+      {
+        "date": "2026-07-29",
+        "kwh": 25.246
+      },
+      {
+        "date": "2026-07-30",
+        "kwh": 21.72
+      },
+      {
+        "date": "2026-07-31",
+        "kwh": 20.576
+      }
+    ]
   },
   "month": {
-    "total_kwh": 0,
-    "avg_kwh_per_day": 0,
-    "max_day": null,
-    "min_day": null,
-    "series": []
+    "total_kwh": 643.47,
+    "avg_kwh_per_day": 21.45,
+    "max_day": {
+      "date": "2026-07-15",
+      "kwh": 31.368
+    },
+    "min_day": {
+      "date": "2026-07-26",
+      "kwh": 12.395
+    },
+    "series": [
+      {
+        "date": "2026-07-02",
+        "kwh": 15.373
+      },
+      {
+        "date": "2026-07-03",
+        "kwh": 18.968
+      },
+      {
+        "date": "2026-07-04",
+        "kwh": 16.932
+      },
+      {
+        "date": "2026-07-05",
+        "kwh": 19.602
+      },
+      {
+        "date": "2026-07-06",
+        "kwh": 19.464
+      },
+      {
+        "date": "2026-07-07",
+        "kwh": 20.533
+      },
+      {
+        "date": "2026-07-08",
+        "kwh": 21.688
+      },
+      {
+        "date": "2026-07-09",
+        "kwh": 23.705
+      },
+      {
+        "date": "2026-07-10",
+        "kwh": 22.278
+      },
+      {
+        "date": "2026-07-11",
+        "kwh": 22.223
+      },
+      {
+        "date": "2026-07-12",
+        "kwh": 30.011
+      },
+      {
+        "date": "2026-07-13",
+        "kwh": 22.088
+      },
+      {
+        "date": "2026-07-14",
+        "kwh": 27.138
+      },
+      {
+        "date": "2026-07-15",
+        "kwh": 31.368
+      },
+      {
+        "date": "2026-07-16",
+        "kwh": 24.716
+      },
+      {
+        "date": "2026-07-17",
+        "kwh": 23.727
+      },
+      {
+        "date": "2026-07-18",
+        "kwh": 20.765
+      },
+      {
+        "date": "2026-07-19",
+        "kwh": 24.941
+      },
+      {
+        "date": "2026-07-20",
+        "kwh": 21.537
+      },
+      {
+        "date": "2026-07-21",
+        "kwh": 20.708
+      },
+      {
+        "date": "2026-07-22",
+        "kwh": 21.785
+      },
+      {
+        "date": "2026-07-23",
+        "kwh": 17.776
+      },
+      {
+        "date": "2026-07-24",
+        "kwh": 24.774
+      },
+      {
+        "date": "2026-07-25",
+        "kwh": 18.369
+      },
+      {
+        "date": "2026-07-26",
+        "kwh": 12.395
+      },
+      {
+        "date": "2026-07-27",
+        "kwh": 16.498
+      },
+      {
+        "date": "2026-07-28",
+        "kwh": 16.563
+      },
+      {
+        "date": "2026-07-29",
+        "kwh": 25.246
+      },
+      {
+        "date": "2026-07-30",
+        "kwh": 21.72
+      },
+      {
+        "date": "2026-07-31",
+        "kwh": 20.576
+      }
+    ]
   },
   "load_curve_48h": []
 }
