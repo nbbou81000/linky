@@ -234,7 +234,7 @@ function render(data){
 
   dash.innerHTML = `
     <div class="row row--stats">
-      ${statPanel('Aujourd\\'hui', 'var(--blue)',
+      ${statPanel("Aujourd'hui", 'var(--blue)',
         fmt(todayKwh), 'kWh',
         delta!=null ? `<div class="stat-delta ${delta>0?'up':'down'}">${delta>0?'▲':'▼'} ${fmt(Math.abs(delta))} kWh (${fmt(Math.abs(deltaPct),0)}%) vs hier</div>` : '',
         'spark-today')}
@@ -335,7 +335,7 @@ function render(data){
 function renderContractTable(data){
   const c = data.contract;
   const id = data.identity;
-  if (!c && !id) return '<div class="empty-state">Pas d\\'info contrat</div>';
+  if (!c && !id) return "<div class=\"empty-state\">Pas d'info contrat</div>";
   const rows = [];
   if (id && id.firstname) rows.push(['Titulaire', `${id.firstname||''} ${id.lastname||''}`]);
   if (Array.isArray(c)) {
