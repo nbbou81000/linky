@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-01T20:23:11.951Z",
-  "generated_at_fr": "01/08 20h23",
+  "generated_at": "2026-08-01T21:02:18.639Z",
+  "generated_at_fr": "01/08 21h02",
   "pdl": "23252966652215",
   "contract": {
     "segment": "C5",
@@ -48,7 +48,7 @@
   "yesterday": {
     "kwh": 21.72
   },
-  "current_power_watts": null,
+  "last_known_power": null,
   "peak_power": {
     "date": "2026-07-15 18:55:26",
     "date_fr": "15 juil",
@@ -301,5 +301,15 @@
     ]
   },
   "hphc": null,
+  "estimated_bill": {
+    "source": "estimated",
+    "period_days": 30,
+    "hp_kwh": 450.43,
+    "hc_kwh": 193.04,
+    "hp_eur": 93.01,
+    "hc_eur": 30.48,
+    "subscription_eur": 19.2,
+    "total_eur": 142.69
+  },
   "load_curve_48h": []
 }
