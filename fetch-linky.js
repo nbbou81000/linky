@@ -115,6 +115,65 @@ function estimateBill(monthTotalKwh, hphc) {
   };
 }
 
+// --- Géométrie SVG pré-calculée pour le mode "graphiques" (pas de JS sur l'écran, tout est statique) ---
+
+function buildBarChart(items, { width = 760, height = 90, gap = 6 } = {}) {
+  const n = items.length;
+  if (!n) return null;
+  const barW = (width - gap * (n - 1)) / n;
+  const maxVal = Math.max(...items.map((d) => d.value), 0.001);
+  const bars = items.map((d, i) => {
+    const h = Math.max(2, Math.round((d.value / maxVal) * height));
+    return {
+      x: Math.round(i * (barW + gap)),
+      y: height - h,
+      w: Math.round(barW),
+      h,
+      value: d.value,
+      label: d.label,
+      highlight: !!d.highlight,
+    };
+  });
+  return { width, height, bars, max_value: Math.round(maxVal * 100) / 100 };
+}
+
+function buildLineChart(points, { width = 760, height = 95, padding = 6 } = {}) {
+  const n = points.length;
+  if (n < 2) return null;
+  const values = points.map((p) => p.value);
+  const minV = Math.min(...values);
+  const maxV = Math.max(...values);
+  const range = maxV - minV || 1;
+  const coords = points.map((p, i) => {
+    const x = Math.round((i / (n - 1)) * width);
+    const y = Math.round(height - padding - ((p.value - minV) / range) * (height - 2 * padding));
+    return { x, y };
+  });
+  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x},${c.y}`).join(" ");
+  const areaPath = `${linePath} L${coords[coords.length - 1].x},${height} L${coords[0].x},${height} Z`;
+  return { width, height, line_path: linePath, area_path: areaPath, min_value: Math.round(minV), max_value: Math.round(maxV) };
+}
+
+function buildHphcBar(hphc, monthTotal, tariffHcPctEstimate, { width = 760 } = {}) {
+  let hcPct;
+  let measured = false;
+  if (hphc && hphc.hc_pct != null) {
+    hcPct = hphc.hc_pct;
+    measured = true;
+  } else {
+    hcPct = tariffHcPctEstimate;
+  }
+  const hpPct = 100 - hcPct;
+  return {
+    measured,
+    hp_pct: Math.round(hpPct * 10) / 10,
+    hc_pct: Math.round(hcPct * 10) / 10,
+    hp_width: Math.round((hpPct / 100) * width),
+    hc_width: Math.round((hcPct / 100) * width),
+    hc_x: Math.round((hpPct / 100) * width),
+  };
+}
+
 async function main() {
   const today = new Date();
   const start30 = new Date(today);
@@ -253,6 +312,22 @@ async function main() {
     estimated_bill: estimateBill(Math.round(total30 * 100) / 100, hphc),
 
     load_curve_48h: loadCurve48h,
+
+    // Géométrie SVG prête à l'emploi pour le mode "graphiques" du plugin (aucun calcul côté Liquid)
+    charts: {
+      daily_14: (() => {
+        const items = last30.slice(-14).map((d) => ({ value: d.kwh, label: d.date_ddmm }));
+        if (items.length) {
+          const maxIdx = items.reduce((best, it, i) => (it.value > items[best].value ? i : best), 0);
+          items[maxIdx].highlight = true;
+        }
+        return buildBarChart(items, { width: 760, height: 90, gap: 6 });
+      })(),
+      load_curve: loadCurve48h.length
+        ? buildLineChart(loadCurve48h.map((p) => ({ value: p.watts })), { width: 760, height: 95 })
+        : null,
+      hphc_bar: buildHphcBar(hphc, Math.round(total30 * 100) / 100, TARIFF.hc_pct_estimate, { width: 760 }),
+    },
   };
 
   fs.writeFileSync("data.json", JSON.stringify(data, null, 2));
