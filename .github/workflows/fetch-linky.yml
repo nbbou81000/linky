@@ -2,7 +2,7 @@ name: Fetch Linky data
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # tous les jours à 6h UTC (7h/8h en France selon saison)
+    - cron: "0 9 * * *"   # tous les jours à 9h UTC (10h/11h en France) — laisse à Enedis le temps de publier le J-1
   workflow_dispatch: {}    # permet de lancer manuellement depuis GitHub
 
 permissions:
