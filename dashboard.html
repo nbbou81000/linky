@@ -29,115 +29,115 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:13px;
   }
-  /* ---- top nav ---- */
   .navbar{
     display:flex;align-items:center;justify-content:space-between;
-    padding:10px 16px;
-    border-bottom:1px solid var(--border);
-    background:var(--bg-canvas);
+    padding:10px 16px;border-bottom:1px solid var(--border);
+    background:var(--bg-canvas);flex-wrap:wrap;gap:8px;
   }
   .navbar-left{display:flex;align-items:center;gap:10px;}
   .logo{
     width:24px;height:24px;border-radius:4px;
     background:linear-gradient(135deg,var(--orange),var(--yellow));
-    display:flex;align-items:center;justify-content:center;
-    font-size:14px;
+    display:flex;align-items:center;justify-content:center;font-size:14px;
   }
   .navbar-title{font-size:15px;font-weight:500;color:#fff;}
   .navbar-sub{font-size:11px;color:var(--text-dim);}
-  .navbar-right{display:flex;align-items:center;gap:8px;}
+  .navbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .chip{
-    border:1px solid var(--border-light);
-    background:var(--bg-panel);
-    color:var(--text-secondary);
-    border-radius:2px;
-    padding:5px 10px;
-    font-size:12px;
-    display:flex;align-items:center;gap:6px;
+    border:1px solid var(--border-light);background:var(--bg-panel);
+    color:var(--text-secondary);border-radius:2px;padding:5px 10px;
+    font-size:12px;display:flex;align-items:center;gap:6px;
   }
   .btn-refresh{
-    border:1px solid var(--border-light);
-    background:var(--bg-panel);
-    color:var(--text-secondary);
-    border-radius:2px 0 0 2px;
-    padding:5px 10px;font-size:13px;cursor:pointer;
+    border:1px solid var(--border-light);background:var(--bg-panel);
+    color:var(--text-secondary);border-radius:2px;padding:5px 10px;
+    font-size:13px;cursor:pointer;
   }
   .btn-refresh:hover{color:#fff;border-color:var(--blue);}
-  .src-input{
-    background:var(--bg-panel);
-    border:1px solid var(--border-light);
-    color:var(--text-primary);
-    border-radius:2px;
-    padding:5px 8px;font-size:12px;
-    width:220px;
+  .src-input, .num-input{
+    background:var(--bg-panel);border:1px solid var(--border-light);
+    color:var(--text-primary);border-radius:2px;padding:5px 8px;font-size:12px;
   }
+  .src-input{width:200px;}
+  .num-input{width:80px;}
 
-  /* ---- grid ---- */
+  .tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--border);background:var(--bg-canvas);}
+  .tab{
+    padding:8px 14px;font-size:12px;color:var(--text-secondary);cursor:pointer;
+    border-bottom:2px solid transparent;user-select:none;
+  }
+  .tab.active{color:#fff;border-bottom-color:var(--orange);}
+  .tab:hover{color:#fff;}
+  .tabpage{display:none;}
+  .tabpage.active{display:block;}
+
   .dashboard{padding:8px;display:flex;flex-direction:column;gap:8px;}
   .row{display:grid;gap:8px;}
   .row--stats{grid-template-columns:repeat(4,1fr);}
   .row--main{grid-template-columns:1fr;}
   .row--split{grid-template-columns:2fr 1fr;}
   .row--split2{grid-template-columns:1fr 1fr;}
+  .row--split3{grid-template-columns:1fr 1fr 1fr;}
+  @media (max-width:900px){
+    .row--stats{grid-template-columns:repeat(2,1fr);}
+    .row--split, .row--split2, .row--split3{grid-template-columns:1fr;}
+  }
 
   .panel{
-    background:var(--bg-panel);
-    border:1px solid var(--border);
-    border-radius:2px;
-    display:flex;flex-direction:column;
-    overflow:hidden;
+    background:var(--bg-panel);border:1px solid var(--border);
+    border-radius:2px;display:flex;flex-direction:column;overflow:hidden;
   }
   .panel-header{
     display:flex;align-items:center;justify-content:space-between;
-    padding:6px 10px;
-    border-bottom:1px solid var(--border);
+    padding:6px 10px;border-bottom:1px solid var(--border);
   }
   .panel-title{
-    font-size:12px;color:var(--text-secondary);
-    text-transform:uppercase;letter-spacing:.04em;
-    display:flex;align-items:center;gap:6px;
+    font-size:12px;color:var(--text-secondary);text-transform:uppercase;
+    letter-spacing:.04em;display:flex;align-items:center;gap:6px;
   }
   .panel-title .dot{width:6px;height:6px;border-radius:50%;}
   .panel-menu{color:var(--text-dim);font-size:14px;}
   .panel-body{padding:10px;flex:1;display:flex;flex-direction:column;}
 
-  /* stat panels */
-  .stat-value{
-    font-size:30px;font-weight:600;color:#fff;line-height:1.1;
-    display:flex;align-items:baseline;gap:5px;
-  }
+  .stat-value{font-size:30px;font-weight:600;color:#fff;line-height:1.1;display:flex;align-items:baseline;gap:5px;}
   .stat-unit{font-size:13px;color:var(--text-secondary);font-weight:400;}
   .stat-delta{font-size:12px;margin-top:4px;display:flex;align-items:center;gap:4px;}
   .stat-delta.up{color:var(--red);}
   .stat-delta.down{color:var(--green);}
   .sparkline{margin-top:auto;height:36px;}
 
-  /* table */
   table{width:100%;border-collapse:collapse;font-size:12px;}
   th{
-    text-align:left;color:var(--text-dim);
-    font-weight:500;text-transform:uppercase;font-size:10px;
-    padding:4px 8px;border-bottom:1px solid var(--border);
+    text-align:left;color:var(--text-dim);font-weight:500;text-transform:uppercase;
+    font-size:10px;padding:4px 8px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;background:var(--bg-panel);
   }
   td{padding:5px 8px;border-bottom:1px solid #212327;color:var(--text-primary);}
   tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#1d2126;}
   .mono{font-variant-numeric:tabular-nums;color:var(--text-secondary);}
+  .table-scroll{max-height:340px;overflow-y:auto;}
 
   .chart-wrap{position:relative;flex:1;min-height:220px;}
   .chart-wrap.small{min-height:180px;}
+  .chart-wrap.tiny{min-height:140px;}
 
   .empty-state{
-    color:var(--text-dim);font-size:12px;
-    display:flex;align-items:center;justify-content:center;
-    height:100%;padding:20px;text-align:center;
+    color:var(--text-dim);font-size:12px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;gap:6px;
   }
-  .footer{
-    text-align:center;color:var(--text-dim);font-size:11px;padding:14px;
-  }
-  .badge{
-    font-size:10px;padding:2px 6px;border-radius:2px;
-    background:rgba(115,191,105,0.15);color:var(--green);
-  }
+  .footer{text-align:center;color:var(--text-dim);font-size:11px;padding:14px;}
+  .badge{font-size:10px;padding:2px 6px;border-radius:2px;background:rgba(115,191,105,0.15);color:var(--green);}
+  .badge.warn{background:rgba(255,152,48,0.15);color:var(--orange);}
+
+  .tariff-form{display:flex;flex-direction:column;gap:10px;}
+  .tariff-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .tariff-row label{color:var(--text-secondary);font-size:12px;}
+  .bignum{font-size:26px;font-weight:600;color:#fff;}
+  .bignum small{font-size:12px;color:var(--text-secondary);font-weight:400;margin-left:4px;}
+  .hphc-legend{display:flex;gap:16px;margin-top:8px;font-size:12px;}
+  .hphc-legend span{display:flex;align-items:center;gap:5px;}
+  .hphc-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;}
 </style>
 </head>
 <body>
@@ -157,11 +157,17 @@
   </div>
 </div>
 
+<div class="tabs">
+  <div class="tab active" data-tab="overview">Vue d'ensemble</div>
+  <div class="tab" data-tab="billing">HP/HC &amp; Facturation</div>
+  <div class="tab" data-tab="details">Détails &amp; contrat</div>
+</div>
+
 <div class="dashboard" id="dashboard">
   <div class="empty-state" style="height:200px;">Renseigne l'URL de ton data.json puis clique sur "Charger".</div>
 </div>
 
-<div class="footer">Linky Dashboard · données via MyElectricalData · généré localement, aucune donnée envoyée à un tiers</div>
+<div class="footer">Linky Dashboard · données via MyElectricalData · calculs de facturation effectués localement dans ton navigateur, rien n'est envoyé à un serveur</div>
 
 <script>
 Chart.defaults.color = '#8e8e8e';
@@ -170,28 +176,30 @@ Chart.defaults.font.size = 11;
 
 const GRID_COLOR = 'rgba(255,255,255,0.06)';
 let charts = [];
+let currentData = null;
 
-function destroyCharts(){
-  charts.forEach(c => c.destroy());
-  charts = [];
+// Tarif Bleu EDF réglementé (option HP/HC) au 1er août 2026 — à ajuster si tu es sur un autre contrat/fournisseur
+const DEFAULT_TARIFF = {
+  hp_price: 0.2065,
+  hc_price: 0.1579,
+  base_price: 0.1927, // >=9kVA
+  subscription_monthly: 19.20,
+  hc_pct_estimate: 30 // hypothèse si pas de courbe de charge dispo
+};
+
+function destroyCharts(){ charts.forEach(c => c.destroy()); charts = []; }
+function fmt(n, d=1){ if (n === null || n === undefined || isNaN(n)) return '--'; return Number(n).toFixed(d); }
+function euro(n){ if (n === null || n === undefined || isNaN(n)) return '--'; return Number(n).toFixed(2) + ' €'; }
+
+function panel(title, dotColor, bodyHtml){
+  return `<div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><span class="dot" style="background:${dotColor}"></span>${title}</div>
+      <div class="panel-menu">⋮</div>
+    </div>
+    <div class="panel-body">${bodyHtml}</div>
+  </div>`;
 }
-
-function fmt(n, d=1){
-  if (n === null || n === undefined || isNaN(n)) return '--';
-  return Number(n).toFixed(d);
-}
-
-function panel(title, dotColor, bodyHtml, extraClass=''){
-  return `
-    <div class="panel ${extraClass}">
-      <div class="panel-header">
-        <div class="panel-title"><span class="dot" style="background:${dotColor}"></span>${title}</div>
-        <div class="panel-menu">⋮</div>
-      </div>
-      <div class="panel-body">${bodyHtml}</div>
-    </div>`;
-}
-
 function statPanel(title, dotColor, value, unit, deltaHtml, canvasId){
   return panel(title, dotColor, `
     <div class="stat-value">${value}<span class="stat-unit">${unit}</span></div>
@@ -200,6 +208,7 @@ function statPanel(title, dotColor, value, unit, deltaHtml, canvasId){
   `);
 }
 
+// ---------- Chargement ----------
 async function loadData(){
   const url = document.getElementById('srcInput').value.trim() || 'data.json';
   const dash = document.getElementById('dashboard');
@@ -213,154 +222,124 @@ async function loadData(){
     dash.innerHTML = `<div class="empty-state" style="height:200px;">Impossible de charger ${url}<br>(${e.message})</div>`;
     return;
   }
-  render(data);
+  currentData = data;
+  renderAll();
 }
 
-function render(data){
+function renderAll(){
+  const data = currentData;
+  document.getElementById('subtitle').textContent =
+    'Maj ' + (data.generated_at_fr || (data.generated_at ? new Date(data.generated_at).toLocaleString('fr-FR') : '--')) +
+    (data.pdl ? ' · PDL ' + data.pdl.slice(0,4) + '••••••••••' : '');
+
+  renderOverview(data);
+  renderBilling(data);
+  renderDetails(data);
+}
+
+// ============================================================
+// TAB 1 : VUE D'ENSEMBLE
+// ============================================================
+function renderOverview(data){
   destroyCharts();
   const dash = document.getElementById('dashboard');
-  document.getElementById('subtitle').textContent =
-    'Maj ' + (data.generated_at ? new Date(data.generated_at).toLocaleString('fr-FR') : '--') +
-    (data.pdl ? ' · PDL ' + data.pdl.slice(0,4) + '••••••••••' : '');
+  Array.from(dash.querySelectorAll('.tabpage')).forEach(e=>e.remove());
 
   const todayKwh = data.today ? data.today.kwh : null;
   const yestKwh = data.yesterday ? data.yesterday.kwh : null;
   const delta = (todayKwh!=null && yestKwh!=null) ? todayKwh - yestKwh : null;
   const deltaPct = (delta!=null && yestKwh) ? (delta/yestKwh*100) : null;
-
   const weekSeries = (data.week && data.week.series) || [];
   const monthSeries = (data.month && data.month.series) || [];
   const loadCurve = data.load_curve_48h || [];
 
-  dash.innerHTML = `
+  const page = document.createElement('div');
+  page.className = 'tabpage active';
+  page.id = 'page-overview';
+  page.innerHTML = `
     <div class="row row--stats">
-      ${statPanel("Aujourd'hui", 'var(--blue)',
-        fmt(todayKwh), 'kWh',
+      ${statPanel("Aujourd'hui", 'var(--blue)', fmt(todayKwh), 'kWh',
         delta!=null ? `<div class="stat-delta ${delta>0?'up':'down'}">${delta>0?'▲':'▼'} ${fmt(Math.abs(delta))} kWh (${fmt(Math.abs(deltaPct),0)}%) vs hier</div>` : '',
         'spark-today')}
-      ${statPanel('Puissance actuelle', 'var(--green)',
-        data.current_power_watts != null ? data.current_power_watts : '--', 'W', '', 'spark-power')}
-      ${statPanel('Pic 30 jours', 'var(--orange)',
-        data.peak_power ? data.peak_power.watts : '--', 'W',
-        data.peak_power ? `<div class="stat-delta" style="color:var(--text-dim)">${new Date(data.peak_power.date).toLocaleDateString('fr-FR')}</div>` : '',
-        'spark-peak')}
-      ${statPanel('Moyenne 30j', 'var(--purple)',
-        fmt(data.month ? data.month.avg_kwh_per_day : null), 'kWh/j',
-        data.month ? `<div class="stat-delta" style="color:var(--text-dim)">Total : ${fmt(data.month.total_kwh)} kWh</div>` : '',
-        'spark-avg')}
+      ${statPanel('Puissance actuelle', 'var(--green)', data.current_power_watts != null ? data.current_power_watts : '--', 'W', '', 'spark-power')}
+      ${statPanel('Pic 30 jours', 'var(--orange)', data.peak_power ? data.peak_power.watts : '--', 'W',
+        data.peak_power ? `<div class="stat-delta" style="color:var(--text-dim)">${data.peak_power.date_fr || ''}</div>` : '', 'spark-peak')}
+      ${statPanel('Moyenne 30j', 'var(--purple)', fmt(data.month ? data.month.avg_kwh_per_day : null), 'kWh/j',
+        data.month ? `<div class="stat-delta" style="color:var(--text-dim)">Total : ${fmt(data.month.total_kwh)} kWh</div>` : '', 'spark-avg')}
     </div>
-
     <div class="row row--main">
-      ${panel('Courbe de charge · 48 dernières heures (W)', 'var(--blue)',
-        '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
+      ${panel('Courbe de charge · 48 dernières heures (W)', 'var(--blue)', '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
     </div>
-
     <div class="row row--split">
-      ${panel('Consommation quotidienne · 30 jours (kWh)', 'var(--green)',
-        '<div class="chart-wrap"><canvas id="chart-daily"></canvas></div>')}
+      ${panel('Consommation quotidienne · 30 jours (kWh)', 'var(--green)', '<div class="chart-wrap"><canvas id="chart-daily"></canvas></div>')}
       ${panel('Contrat & identité', 'var(--yellow)', renderContractTable(data))}
     </div>
-
     <div class="row row--split2">
       ${panel('Extremes du mois', 'var(--red)', renderExtremesTable(data))}
-      ${panel('7 derniers jours', 'var(--orange)',
-        '<div class="chart-wrap small"><canvas id="chart-week"></canvas></div>')}
+      ${panel('7 derniers jours', 'var(--orange)', '<div class="chart-wrap small"><canvas id="chart-week"></canvas></div>')}
     </div>
   `;
+  document.getElementById('dashboard').appendChild(page);
 
-  // Sparklines
-  makeSparkline('spark-today', weekSeries.map(d=>d.kwh), 'var(--blue)'.trim());
+  makeSparkline('spark-today', weekSeries.map(d=>d.kwh), '#5794f2');
   makeSparkline('spark-avg', monthSeries.map(d=>d.kwh), '#b877d9');
 
-  // Courbe de charge
   if (loadCurve.length) {
-    const ctx = document.getElementById('chart-loadcurve').getContext('2d');
-    const c = new Chart(ctx, {
+    charts.push(new Chart(document.getElementById('chart-loadcurve').getContext('2d'), {
       type:'line',
       data:{
         labels: loadCurve.map(d => new Date(d.ts).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})),
-        datasets:[{
-          data: loadCurve.map(d=>d.watts),
-          borderColor:'#5794f2',
-          backgroundColor:'rgba(87,148,242,0.15)',
-          fill:true, tension:0.25, pointRadius:0, borderWidth:1.5
-        }]
+        datasets:[{ data: loadCurve.map(d=>d.watts), borderColor:'#5794f2', backgroundColor:'rgba(87,148,242,0.15)',
+          fill:true, tension:0.25, pointRadius:0, borderWidth:1.5 }]
       },
       options: baseLineOptions('W')
-    });
-    charts.push(c);
+    }));
   } else {
     document.getElementById('chart-loadcurve').closest('.chart-wrap').innerHTML =
-      '<div class="empty-state">Pas de données de courbe de charge</div>';
+      '<div class="empty-state">Pas de courbe de charge disponible.<br><span class="badge warn">Active la "collecte enrichie" sur myelectricaldata.fr</span></div>';
   }
 
-  // Conso quotidienne 30j (bar)
   if (monthSeries.length) {
-    const ctx2 = document.getElementById('chart-daily').getContext('2d');
-    const c2 = new Chart(ctx2, {
+    charts.push(new Chart(document.getElementById('chart-daily').getContext('2d'), {
       type:'bar',
-      data:{
-        labels: monthSeries.map(d => new Date(d.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})),
-        datasets:[{
-          data: monthSeries.map(d=>d.kwh),
-          backgroundColor:'#73bf69', borderRadius:1, maxBarThickness:14
-        }]
-      },
+      data:{ labels: monthSeries.map(d => new Date(d.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})),
+        datasets:[{ data: monthSeries.map(d=>d.kwh), backgroundColor:'#73bf69', borderRadius:1, maxBarThickness:14 }] },
       options: baseBarOptions('kWh')
-    });
-    charts.push(c2);
-  } else {
-    document.getElementById('chart-daily').closest('.chart-wrap').innerHTML =
-      '<div class="empty-state">Pas de données mensuelles</div>';
+    }));
   }
 
-  // 7 derniers jours
   if (weekSeries.length) {
-    const ctx3 = document.getElementById('chart-week').getContext('2d');
-    const c3 = new Chart(ctx3, {
+    charts.push(new Chart(document.getElementById('chart-week').getContext('2d'), {
       type:'bar',
-      data:{
-        labels: weekSeries.map(d => new Date(d.date).toLocaleDateString('fr-FR',{weekday:'short'})),
-        datasets:[{ data: weekSeries.map(d=>d.kwh), backgroundColor:'#ff9830', borderRadius:1 }]
-      },
+      data:{ labels: weekSeries.map(d => new Date(d.date).toLocaleDateString('fr-FR',{weekday:'short'})),
+        datasets:[{ data: weekSeries.map(d=>d.kwh), backgroundColor:'#ff9830', borderRadius:1 }] },
       options: baseBarOptions('kWh')
-    });
-    charts.push(c3);
-  } else {
-    document.getElementById('chart-week').closest('.chart-wrap').innerHTML =
-      '<div class="empty-state">Pas de données</div>';
+    }));
   }
 }
 
 function renderContractTable(data){
   const c = data.contract;
   const id = data.identity;
-  if (!c && !id) return "<div class=\"empty-state\">Pas d'info contrat</div>";
   const rows = [];
-  if (id && id.firstname) rows.push(['Titulaire', `${id.firstname||''} ${id.lastname||''}`]);
-  if (Array.isArray(c)) {
-    const contract = c[0] || {};
-    if (contract.subscribed_power) rows.push(['Puissance souscrite', contract.subscribed_power]);
-    if (contract.offpeak_hours) rows.push(['Heures creuses', contract.offpeak_hours]);
-    if (contract.last_activation_date) rows.push(['Activation', contract.last_activation_date]);
-    if (contract.segment) rows.push(['Segment', contract.segment]);
-  } else if (c) {
-    Object.entries(c).slice(0,6).forEach(([k,v]) => {
-      if (typeof v === 'string' || typeof v === 'number') rows.push([k, v]);
-    });
+  const person = id && id.identity && id.identity.natural_person;
+  if (person) rows.push(['Titulaire', `${person.title||''} ${person.firstname||''} ${person.lastname||''}`]);
+  if (c) {
+    if (c.subscribed_power) rows.push(['Puissance souscrite', c.subscribed_power]);
+    if (c.offpeak_hours) rows.push(['Heures creuses', c.offpeak_hours]);
+    if (c.segment) rows.push(['Segment', c.segment]);
+    if (c.last_activation_date) rows.push(['Activation', c.last_activation_date]);
   }
   if (!rows.length) return '<div class="empty-state">Données contrat indisponibles</div>';
-  return `<table><tbody>
-    ${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}
-  </tbody></table>`;
+  return `<table><tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function renderExtremesTable(data){
   const m = data.month;
   if (!m) return '<div class="empty-state">--</div>';
   const rows = [
-    ['Jour max', m.max_day ? `${fmt(m.max_day.kwh)} kWh` : '--', m.max_day ? new Date(m.max_day.date).toLocaleDateString('fr-FR') : ''],
-    ['Jour min', m.min_day ? `${fmt(m.min_day.kwh)} kWh` : '--', m.min_day ? new Date(m.min_day.date).toLocaleDateString('fr-FR') : ''],
+    ['Jour max', m.max_day ? `${fmt(m.max_day.kwh)} kWh` : '--', m.max_day ? m.max_day.date_fr : ''],
+    ['Jour min', m.min_day ? `${fmt(m.min_day.kwh)} kWh` : '--', m.min_day ? m.min_day.date_fr : ''],
     ['Total 30j', `${fmt(m.total_kwh)} kWh`, ''],
     ['Total 7j', data.week ? `${fmt(data.week.total_kwh)} kWh` : '--', ''],
   ];
@@ -369,66 +348,224 @@ function renderExtremesTable(data){
   </tbody></table>`;
 }
 
+// ============================================================
+// TAB 2 : HP/HC & FACTURATION
+// ============================================================
+function renderBilling(data){
+  const monthTotal = data.month ? data.month.total_kwh : 0;
+  const hphc = data.hphc; // null si courbe de charge indisponible
+  const hasRealHphc = !!(hphc && hphc.hc_pct != null);
+
+  const page = document.createElement('div');
+  page.className = 'tabpage';
+  page.id = 'page-billing';
+  page.innerHTML = `
+    <div class="row row--split3">
+      ${panel('Répartition Heures Pleines / Creuses', 'var(--yellow)', `
+        <div class="chart-wrap tiny"><canvas id="chart-hphc"></canvas></div>
+        <div class="hphc-legend">
+          <span><i style="background:#ff9830"></i>HP : <b id="hp-kwh-label">--</b></span>
+          <span><i style="background:#5794f2"></i>HC : <b id="hc-kwh-label">--</b></span>
+        </div>
+        ${hasRealHphc
+          ? '<div style="margin-top:6px"><span class="badge">Calculé sur courbe de charge réelle</span></div>'
+          : '<div style="margin-top:6px"><span class="badge warn">Estimation (courbe de charge non activée) — ajuste le % ci-contre</span></div>'}
+      `)}
+      ${panel('Paramètres tarifaires', 'var(--blue)', `
+        <div class="tariff-form">
+          <div class="tariff-row"><label>Prix HP (€/kWh)</label><input class="num-input" id="in-hp" type="number" step="0.0001" value="${DEFAULT_TARIFF.hp_price}"></div>
+          <div class="tariff-row"><label>Prix HC (€/kWh)</label><input class="num-input" id="in-hc" type="number" step="0.0001" value="${DEFAULT_TARIFF.hc_price}"></div>
+          <div class="tariff-row"><label>Abonnement (€/mois)</label><input class="num-input" id="in-sub" type="number" step="0.01" value="${DEFAULT_TARIFF.subscription_monthly}"></div>
+          ${!hasRealHphc ? `<div class="tariff-row"><label>% conso en HC (estimé)</label><input class="num-input" id="in-hcpct" type="number" step="1" value="${DEFAULT_TARIFF.hc_pct_estimate}"></div>` : ''}
+          <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">Défauts = Tarif Bleu EDF réglementé, HP/HC, 9 kVA (août 2026). Modifie si tu es sur une offre de marché.</div>
+        </div>
+      `)}
+      ${panel('Facture estimée du mois', 'var(--green)', `
+        <div id="bill-summary">
+          <div style="margin-bottom:8px;">
+            <div class="bignum" id="bill-total">-- €</div>
+            <div style="font-size:11px;color:var(--text-dim)">estimation TTC, hors taxes locales variables</div>
+          </div>
+          <table style="margin-top:6px;">
+            <tbody>
+              <tr><td>Part énergie HP</td><td class="mono" id="bill-hp">--</td></tr>
+              <tr><td>Part énergie HC</td><td class="mono" id="bill-hc">--</td></tr>
+              <tr><td>Abonnement</td><td class="mono" id="bill-sub">--</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `)}
+    </div>
+    <div class="row row--split2">
+      ${panel('Consommation par jour de la semaine (moyenne 30j)', 'var(--purple)', '<div class="chart-wrap small"><canvas id="chart-weekday"></canvas></div>')}
+      ${panel('Projection sur 30 jours', 'var(--orange)', renderProjectionTable(data))}
+    </div>
+  `;
+  document.getElementById('dashboard').appendChild(page);
+
+  function recompute(){
+    const hp_price = parseFloat(document.getElementById('in-hp').value) || 0;
+    const hc_price = parseFloat(document.getElementById('in-hc').value) || 0;
+    const sub = parseFloat(document.getElementById('in-sub').value) || 0;
+    let hc_kwh, hp_kwh;
+    if (hasRealHphc) {
+      // on rescale la répartition mesurée (souvent sur une fenêtre différente de 30j) sur le total du mois
+      hc_kwh = monthTotal * (hphc.hc_pct/100);
+      hp_kwh = monthTotal - hc_kwh;
+    } else {
+      const hcPctInput = document.getElementById('in-hcpct');
+      const hcPct = hcPctInput ? (parseFloat(hcPctInput.value)||0) : DEFAULT_TARIFF.hc_pct_estimate;
+      hc_kwh = monthTotal * (hcPct/100);
+      hp_kwh = monthTotal - hc_kwh;
+    }
+    const costHp = hp_kwh * hp_price;
+    const costHc = hc_kwh * hc_price;
+    const total = costHp + costHc + sub;
+
+    document.getElementById('hp-kwh-label').textContent = fmt(hp_kwh) + ' kWh';
+    document.getElementById('hc-kwh-label').textContent = fmt(hc_kwh) + ' kWh';
+    document.getElementById('bill-total').innerHTML = euro(total) + ' <small>/ mois</small>';
+    document.getElementById('bill-hp').textContent = euro(costHp) + ' (' + fmt(hp_kwh) + ' kWh)';
+    document.getElementById('bill-hc').textContent = euro(costHc) + ' (' + fmt(hc_kwh) + ' kWh)';
+    document.getElementById('bill-sub').textContent = euro(sub);
+
+    const donut = charts.find(c => c.canvas.id === 'chart-hphc');
+    if (donut) { donut.data.datasets[0].data = [hp_kwh, hc_kwh]; donut.update(); }
+  }
+
+  ['in-hp','in-hc','in-sub','in-hcpct'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', recompute);
+  });
+
+  const initHc = hasRealHphc ? monthTotal*(hphc.hc_pct/100) : monthTotal*(DEFAULT_TARIFF.hc_pct_estimate/100);
+  const initHp = monthTotal - initHc;
+  charts.push(new Chart(document.getElementById('chart-hphc').getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:['Heures pleines','Heures creuses'], datasets:[{ data:[initHp, initHc], backgroundColor:['#ff9830','#5794f2'], borderColor:'#181b1f', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#181b1f', borderColor:'#2c3235', borderWidth:1 } }, cutout:'65%' }
+  }));
+
+  // Moyenne par jour de semaine
+  const monthSeries = (data.month && data.month.series) || [];
+  const byWeekday = [0,0,0,0,0,0,0];
+  const countWeekday = [0,0,0,0,0,0,0];
+  monthSeries.forEach(d => { const wd = new Date(d.date).getDay(); byWeekday[wd]+=d.kwh; countWeekday[wd]++; });
+  const avgWeekday = byWeekday.map((v,i)=> countWeekday[i] ? v/countWeekday[i] : 0);
+  const labels = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  if (monthSeries.length) {
+    charts.push(new Chart(document.getElementById('chart-weekday').getContext('2d'), {
+      type:'bar',
+      data:{ labels, datasets:[{ data: avgWeekday, backgroundColor:'#b877d9', borderRadius:1 }] },
+      options: baseBarOptions('kWh')
+    }));
+  }
+
+  recompute();
+}
+
+function renderProjectionTable(data){
+  const avg = data.month ? data.month.avg_kwh_per_day : null;
+  if (!avg) return '<div class="empty-state">--</div>';
+  const proj30 = avg*30;
+  const proj365 = avg*365;
+  return `<table><tbody>
+    <tr><td>Moyenne journalière</td><td class="mono">${fmt(avg)} kWh</td></tr>
+    <tr><td>Projection 30 jours</td><td class="mono">${fmt(proj30)} kWh</td></tr>
+    <tr><td>Projection annuelle</td><td class="mono">${fmt(proj365,0)} kWh</td></tr>
+  </tbody></table>
+  <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Projection linéaire basée sur la moyenne des 30 derniers jours — ne tient pas compte de la saisonnalité (chauffage l'hiver, etc.)</div>`;
+}
+
+// ============================================================
+// TAB 3 : DÉTAILS & CONTRAT
+// ============================================================
+function renderDetails(data){
+  const monthSeries = (data.month && data.month.series) || [];
+  const addr = data.address;
+
+  const page = document.createElement('div');
+  page.className = 'tabpage';
+  page.id = 'page-details';
+  page.innerHTML = `
+    <div class="row row--split2">
+      ${panel('Adresse du point de livraison', 'var(--blue)', renderAddressTable(addr))}
+      ${panel('Contrat complet', 'var(--yellow)', renderFullContractTable(data.contract))}
+    </div>
+    <div class="row row--main">
+      ${panel('Historique complet · 30 jours', 'var(--green)', `
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Jour</th><th>kWh</th></tr></thead>
+            <tbody>${monthSeries.slice().reverse().map(d=>`
+              <tr><td>${d.date_fr||d.date}</td><td>${(d.weekday_fr||'').toUpperCase()}</td><td class="mono">${fmt(d.kwh)}</td></tr>
+            `).join('')}</tbody>
+          </table>
+        </div>
+      `)}
+    </div>
+  `;
+  document.getElementById('dashboard').appendChild(page);
+}
+
+function renderAddressTable(addr){
+  if (!addr) return '<div class="empty-state">Adresse indisponible</div>';
+  const rows = [
+    ['Rue', addr.street],
+    ['Code postal', addr.postal_code],
+    ['Ville', addr.city],
+    ['Code INSEE', addr.insee_code],
+    ['Pays', addr.country],
+  ].filter(([,v])=>v);
+  return `<table><tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function renderFullContractTable(c){
+  if (!c) return '<div class="empty-state">Contrat indisponible</div>';
+  const rows = Object.entries(c).filter(([,v]) => typeof v === 'string' || typeof v === 'number');
+  if (!rows.length) return '<div class="empty-state">--</div>';
+  return `<table><tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}</tbody></table>`;
+}
+
+// ---------- Helpers graphiques ----------
 function makeSparkline(id, values, color){
   const el = document.getElementById(id);
   if (!el || !values.length) return;
-  const c = new Chart(el.getContext('2d'), {
+  charts.push(new Chart(el.getContext('2d'), {
     type:'line',
-    data:{ labels: values.map((_,i)=>i), datasets:[{
-      data: values, borderColor: color, borderWidth:1.5,
-      pointRadius:0, tension:0.3, fill:false
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{enabled:false}},
-      scales:{ x:{display:false}, y:{display:false} },
-      elements:{ line:{ borderJoinStyle:'round' } }
-    }
-  });
-  charts.push(c);
+    data:{ labels: values.map((_,i)=>i), datasets:[{ data: values, borderColor: color, borderWidth:1.5, pointRadius:0, tension:0.3, fill:false }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{enabled:false}}, scales:{ x:{display:false}, y:{display:false} } }
+  }));
 }
-
 function baseLineOptions(unit){
   return {
-    responsive:true, maintainAspectRatio:false,
-    interaction:{mode:'index', intersect:false},
-    plugins:{
-      legend:{display:false},
-      tooltip:{
-        backgroundColor:'#181b1f', borderColor:'#2c3235', borderWidth:1,
-        titleColor:'#d8d9da', bodyColor:'#d8d9da',
-        callbacks:{ label: ctx => ctx.parsed.y + ' ' + unit }
-      }
-    },
-    scales:{
-      x:{ grid:{color:GRID_COLOR, drawTicks:false}, ticks:{maxTicksLimit:8, color:'#6a6f76'} },
-      y:{ grid:{color:GRID_COLOR, drawTicks:false}, ticks:{color:'#6a6f76'} }
-    }
+    responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+    plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#181b1f', borderColor:'#2c3235', borderWidth:1, titleColor:'#d8d9da', bodyColor:'#d8d9da', callbacks:{ label: ctx => ctx.parsed.y + ' ' + unit } } },
+    scales:{ x:{ grid:{color:GRID_COLOR, drawTicks:false}, ticks:{maxTicksLimit:8, color:'#6a6f76'} }, y:{ grid:{color:GRID_COLOR, drawTicks:false}, ticks:{color:'#6a6f76'} } }
   };
 }
-
 function baseBarOptions(unit){
   return {
     responsive:true, maintainAspectRatio:false,
-    plugins:{
-      legend:{display:false},
-      tooltip:{
-        backgroundColor:'#181b1f', borderColor:'#2c3235', borderWidth:1,
-        titleColor:'#d8d9da', bodyColor:'#d8d9da',
-        callbacks:{ label: ctx => ctx.parsed.y + ' ' + unit }
-      }
-    },
-    scales:{
-      x:{ grid:{display:false}, ticks:{maxTicksLimit:10, color:'#6a6f76'} },
-      y:{ grid:{color:GRID_COLOR}, ticks:{color:'#6a6f76'} }
-    }
+    plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#181b1f', borderColor:'#2c3235', borderWidth:1, titleColor:'#d8d9da', bodyColor:'#d8d9da', callbacks:{ label: ctx => ctx.parsed.y + ' ' + unit } } },
+    scales:{ x:{ grid:{display:false}, ticks:{maxTicksLimit:10, color:'#6a6f76'} }, y:{ grid:{color:GRID_COLOR}, ticks:{color:'#6a6f76'} } }
   };
 }
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('active'));
+    const target = document.getElementById('page-' + tab.dataset.tab);
+    if (target) target.classList.add('active');
+  });
+});
 
 document.getElementById('loadBtn').addEventListener('click', loadData);
 document.getElementById('srcInput').addEventListener('keydown', e => { if (e.key==='Enter') loadData(); });
 
-// Auto-load on open (works when hosted next to data.json)
 loadData();
 </script>
 </body>
