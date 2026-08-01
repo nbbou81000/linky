@@ -146,8 +146,12 @@ async function main() {
   const last7 = dailySeries.slice(-7);
   const last30 = dailySeries.slice(-30);
 
-  const todayKwh = dailySeries.length ? dailySeries[dailySeries.length - 1].kwh : null;
   const yesterdayKwh = dailySeries.length > 1 ? dailySeries[dailySeries.length - 2].kwh : null;
+  const lastAvailable = dailySeries.length ? dailySeries[dailySeries.length - 1] : null;
+  // Écart entre la date du jour d'exécution et la date réelle du dernier point Enedis (J+1 en théorie, parfois plus)
+  const dataLagDays = lastAvailable
+    ? Math.round((new Date(todayStr) - new Date(lastAvailable.date)) / 86400000)
+    : null;
 
   const avg7 = average(last7.map((d) => d.kwh));
   const avg30 = average(last30.map((d) => d.kwh));
@@ -213,7 +217,10 @@ async function main() {
     address: addresses?.customer?.usage_points?.[0]?.usage_point?.usage_point_addresses || addresses || null,
     offpeak_ranges: offpeakRanges,
 
-    today: { date: todayStr, date_fr: dateFr(todayStr), kwh: todayKwh },
+    // "Dernier jour connu" avec sa vraie date Enedis (PAS forcément aujourd'hui : J+1 en théorie, parfois plus)
+    last_known_day: lastAvailable
+      ? { date: lastAvailable.date, date_fr: lastAvailable.date_fr, weekday_fr: lastAvailable.weekday_fr, kwh: lastAvailable.kwh, lag_days: dataLagDays }
+      : null,
     yesterday: { kwh: yesterdayKwh },
     // Dernière puissance CONNUE (pas temps réel, voir commentaire plus haut)
     last_known_power: lastKnownPower
@@ -243,6 +250,9 @@ async function main() {
 
   fs.writeFileSync("data.json", JSON.stringify(data, null, 2));
   console.log("✅ data.json généré.");
+  if (dataLagDays != null && dataLagDays > 1) {
+    console.log(`⚠️  Dernier jour disponible = J-${dataLagDays} (Enedis publie normalement en J+1). Le cron tourne peut-être trop tôt, ou Enedis a du retard aujourd'hui.`);
+  }
   if (!loadCurveReadings.length) {
     console.log("ℹ️  Courbe de charge vide : active la 'collecte enrichie' sur myelectricaldata.fr (24-48h de délai après activation).");
   }

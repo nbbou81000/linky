@@ -247,7 +247,7 @@ function renderOverview(data){
   const dash = document.getElementById('dashboard');
   Array.from(dash.querySelectorAll('.tabpage')).forEach(e=>e.remove());
 
-  const todayKwh = data.today ? data.today.kwh : null;
+  const todayKwh = data.last_known_day ? data.last_known_day.kwh : null;
   const yestKwh = data.yesterday ? data.yesterday.kwh : null;
   const delta = (todayKwh!=null && yestKwh!=null) ? todayKwh - yestKwh : null;
   const deltaPct = (delta!=null && yestKwh) ? (delta/yestKwh*100) : null;
@@ -260,8 +260,8 @@ function renderOverview(data){
   page.id = 'page-overview';
   page.innerHTML = `
     <div class="row row--stats">
-      ${statPanel("Aujourd'hui", 'var(--blue)', fmt(todayKwh), 'kWh',
-        delta!=null ? `<div class="stat-delta ${delta>0?'up':'down'}">${delta>0?'▲':'▼'} ${fmt(Math.abs(delta))} kWh (${fmt(Math.abs(deltaPct),0)}%) vs hier</div>` : '',
+      ${statPanel(data.last_known_day ? `Dernier jour connu (${data.last_known_day.date_fr})` : "Dernier jour connu", 'var(--blue)', fmt(todayKwh), 'kWh',
+        delta!=null ? `<div class="stat-delta ${delta>0?'up':'down'}">${delta>0?'▲':'▼'} ${fmt(Math.abs(delta))} kWh (${fmt(Math.abs(deltaPct),0)}%) vs veille</div>` : '',
         'spark-today')}
       ${statPanel('Dernière puissance connue', 'var(--green)', data.last_known_power ? data.last_known_power.watts : '--', 'W',
         data.last_known_power ? `<div class="stat-delta" style="color:var(--text-dim)">${data.last_known_power.ts_fr} · pas temps réel</div>` : '', 'spark-power')}
