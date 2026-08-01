@@ -1,0 +1,33 @@
+name: Fetch Linky data
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # tous les jours à 6h UTC (7h/8h en France selon saison)
+  workflow_dispatch: {}    # permet de lancer manuellement depuis GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch Linky data
+        env:
+          MED_TOKEN: ${{ secrets.MED_TOKEN }}
+          MED_PDL: ${{ secrets.MED_PDL }}
+        run: node fetch-linky.js
+
+      - name: Commit data.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data.json
+          git diff --staged --quiet || git commit -m "Update Linky data.json"
+          git push
