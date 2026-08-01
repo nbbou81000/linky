@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-08-01T19:31:50.627Z",
+  "pdl": "23252966652215",
+  "contract": null,
+  "identity": null,
+  "address": null,
+  "today": {
+    "date": "2026-08-01",
+    "kwh": null
+  },
+  "yesterday": {
+    "kwh": null
+  },
+  "current_power_watts": null,
+  "peak_power": null,
+  "week": {
+    "total_kwh": 0,
+    "avg_kwh_per_day": 0,
+    "series": []
+  },
+  "month": {
+    "total_kwh": 0,
+    "avg_kwh_per_day": 0,
+    "max_day": null,
+    "min_day": null,
+    "series": []
+  },
+  "load_curve_48h": []
+}
