@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linky · Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-canvas:#111217;
+    --bg-panel:#181b1f;
+    --border:#2c3235;
+    --border-light:#34383c;
+    --text-primary:#d8d9da;
+    --text-secondary:#8e8e8e;
+    --text-dim:#6a6f76;
+    --green:#73bf69;
+    --blue:#5794f2;
+    --orange:#ff9830;
+    --red:#f2495c;
+    --yellow:#fade2a;
+    --purple:#b877d9;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg-canvas);
+    color:var(--text-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;
+  }
+  /* ---- top nav ---- */
+  .navbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg-canvas);
+  }
+  .navbar-left{display:flex;align-items:center;gap:10px;}
+  .logo{
+    width:24px;height:24px;border-radius:4px;
+    background:linear-gradient(135deg,var(--orange),var(--yellow));
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;
+  }
+  .navbar-title{font-size:15px;font-weight:500;color:#fff;}
+  .navbar-sub{font-size:11px;color:var(--text-dim);}
+  .navbar-right{display:flex;align-items:center;gap:8px;}
+  .chip{
+    border:1px solid var(--border-light);
+    background:var(--bg-panel);
+    color:var(--text-secondary);
+    border-radius:2px;
+    padding:5px 10px;
+    font-size:12px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .btn-refresh{
+    border:1px solid var(--border-light);
+    background:var(--bg-panel);
+    color:var(--text-secondary);
+    border-radius:2px 0 0 2px;
+    padding:5px 10px;font-size:13px;cursor:pointer;
+  }
+  .btn-refresh:hover{color:#fff;border-color:var(--blue);}
+  .src-input{
+    background:var(--bg-panel);
+    border:1px solid var(--border-light);
+    color:var(--text-primary);
+    border-radius:2px;
+    padding:5px 8px;font-size:12px;
+    width:220px;
+  }
+
+  /* ---- grid ---- */
+  .dashboard{padding:8px;display:flex;flex-direction:column;gap:8px;}
+  .row{display:grid;gap:8px;}
+  .row--stats{grid-template-columns:repeat(4,1fr);}
+  .row--main{grid-template-columns:1fr;}
+  .row--split{grid-template-columns:2fr 1fr;}
+  .row--split2{grid-template-columns:1fr 1fr;}
+
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:2px;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:6px 10px;
+    border-bottom:1px solid var(--border);
+  }
+  .panel-title{
+    font-size:12px;color:var(--text-secondary);
+    text-transform:uppercase;letter-spacing:.04em;
+    display:flex;align-items:center;gap:6px;
+  }
+  .panel-title .dot{width:6px;height:6px;border-radius:50%;}
+  .panel-menu{color:var(--text-dim);font-size:14px;}
+  .panel-body{padding:10px;flex:1;display:flex;flex-direction:column;}
+
+  /* stat panels */
+  .stat-value{
+    font-size:30px;font-weight:600;color:#fff;line-height:1.1;
+    display:flex;align-items:baseline;gap:5px;
+  }
+  .stat-unit{font-size:13px;color:var(--text-secondary);font-weight:400;}
+  .stat-delta{font-size:12px;margin-top:4px;display:flex;align-items:center;gap:4px;}
+  .stat-delta.up{color:var(--red);}
+  .stat-delta.down{color:var(--green);}
+  .sparkline{margin-top:auto;height:36px;}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{
+    text-align:left;color:var(--text-dim);
+    font-weight:500;text-transform:uppercase;font-size:10px;
+    padding:4px 8px;border-bottom:1px solid var(--border);
+  }
+  td{padding:5px 8px;border-bottom:1px solid #212327;color:var(--text-primary);}
+  tr:last-child td{border-bottom:none;}
+  .mono{font-variant-numeric:tabular-nums;color:var(--text-secondary);}
+
+  .chart-wrap{position:relative;flex:1;min-height:220px;}
+  .chart-wrap.small{min-height:180px;}
+
+  .empty-state{
+    color:var(--text-dim);font-size:12px;
+    display:flex;align-items:center;justify-content:center;
+    height:100%;padding:20px;text-align:center;
+  }
+  .footer{
+    text-align:center;color:var(--text-dim);font-size:11px;padding:14px;
+  }
+  .badge{
+    font-size:10px;padding:2px 6px;border-radius:2px;
+    background:rgba(115,191,105,0.15);color:var(--green);
+  }
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="navbar-left">
+    <div class="logo">⚡</div>
+    <div>
+      <div class="navbar-title">Linky Dashboard</div>
+      <div class="navbar-sub" id="subtitle">Chargement…</div>
+    </div>
+  </div>
+  <div class="navbar-right">
+    <input class="src-input" id="srcInput" placeholder="URL du data.json" value="data.json">
+    <button class="btn-refresh" id="loadBtn">↻ Charger</button>
+    <div class="chip">📅 30 derniers jours</div>
+  </div>
+</div>
+
+<div class="dashboard" id="dashboard">
+  <div class="empty-state" style="height:200px;">Renseigne l'URL de ton data.json puis clique sur "Charger".</div>
+</div>
+
+<div class="footer">Linky Dashboard · données via MyElectricalData · généré localement, aucune donnée envoyée à un tiers</div>
+
+<script>
+Chart.defaults.color = '#8e8e8e';
+Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+Chart.defaults.font.size = 11;
+
+const GRID_COLOR = 'rgba(255,255,255,0.06)';
+let charts = [];
+
+function destroyCharts(){
+  charts.forEach(c => c.destroy());
+  charts = [];
+}
+
+function fmt(n, d=1){
+  if (n === null || n === undefined || isNaN(n)) return '--';
+  return Number(n).toFixed(d);
+}
+
+function panel(title, dotColor, bodyHtml, extraClass=''){
+  return `
+    <div class="panel ${extraClass}">
+      <div class="panel-header">
+        <div class="panel-title"><span class="dot" style="background:${dotColor}"></span>${title}</div>
+        <div class="panel-menu">⋮</div>
+      </div>
+      <div class="panel-body">${bodyHtml}</div>
+    </div>`;
+}
+
+function statPanel(title, dotColor, value, unit, deltaHtml, canvasId){
+  return panel(title, dotColor, `
+    <div class="stat-value">${value}<span class="stat-unit">${unit}</span></div>
+    ${deltaHtml || ''}
+    <div class="sparkline"><canvas id="${canvasId}"></canvas></div>
+  `);
+}
+
+async function loadData(){
+  const url = document.getElementById('srcInput').value.trim() || 'data.json';
+  const dash = document.getElementById('dashboard');
+  dash.innerHTML = '<div class="empty-state" style="height:200px;">Chargement des données…</div>';
+  let data;
+  try {
+    const res = await fetch(url, {cache:'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch(e) {
+    dash.innerHTML = `<div class="empty-state" style="height:200px;">Impossible de charger ${url}<br>(${e.message})</div>`;
+    return;
+  }
+  render(data);
+}
+
+function render(data){
+  destroyCharts();
+  const dash = document.getElementById('dashboard');
+  document.getElementById('subtitle').textContent =
+    'Maj ' + (data.generated_at ? new Date(data.generated_at).toLocaleString('fr-FR') : '--') +
+    (data.pdl ? ' · PDL ' + data.pdl.slice(0,4) + '••••••••••' : '');
+
+  const todayKwh = data.today ? data.today.kwh : null;
+  const yestKwh = data.yesterday ? data.yesterday.kwh : null;
+  const delta = (todayKwh!=null && yestKwh!=null) ? todayKwh - yestKwh : null;
+  const deltaPct = (delta!=null && yestKwh) ? (delta/yestKwh*100) : null;
+
+  const weekSeries = (data.week && data.week.series) || [];
+  const monthSeries = (data.month && data.month.series) || [];
+  const loadCurve = data.load_curve_48h || [];
+
+  dash.innerHTML = `
+    <div class="row row--stats">
+      ${statPanel('Aujourd\\'hui', 'var(--blue)',
+        fmt(todayKwh), 'kWh',
+        delta!=null ? `<div class="stat-delta ${delta>0?'up':'down'}">${delta>0?'▲':'▼'} ${fmt(Math.abs(delta))} kWh (${fmt(Math.abs(deltaPct),0)}%) vs hier</div>` : '',
+        'spark-today')}
+      ${statPanel('Puissance actuelle', 'var(--green)',
+        data.current_power_watts != null ? data.current_power_watts : '--', 'W', '', 'spark-power')}
+      ${statPanel('Pic 30 jours', 'var(--orange)',
+        data.peak_power ? data.peak_power.watts : '--', 'W',
+        data.peak_power ? `<div class="stat-delta" style="color:var(--text-dim)">${new Date(data.peak_power.date).toLocaleDateString('fr-FR')}</div>` : '',
+        'spark-peak')}
+      ${statPanel('Moyenne 30j', 'var(--purple)',
+        fmt(data.month ? data.month.avg_kwh_per_day : null), 'kWh/j',
+        data.month ? `<div class="stat-delta" style="color:var(--text-dim)">Total : ${fmt(data.month.total_kwh)} kWh</div>` : '',
+        'spark-avg')}
+    </div>
+
+    <div class="row row--main">
+      ${panel('Courbe de charge · 48 dernières heures (W)', 'var(--blue)',
+        '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
+    </div>
+
+    <div class="row row--split">
+      ${panel('Consommation quotidienne · 30 jours (kWh)', 'var(--green)',
+        '<div class="chart-wrap"><canvas id="chart-daily"></canvas></div>')}
+      ${panel('Contrat & identité', 'var(--yellow)', renderContractTable(data))}
+    </div>
+
+    <div class="row row--split2">
+      ${panel('Extremes du mois', 'var(--red)', renderExtremesTable(data))}
+      ${panel('7 derniers jours', 'var(--orange)',
+        '<div class="chart-wrap small"><canvas id="chart-week"></canvas></div>')}
+    </div>
+  `;
+
+  // Sparklines
+  makeSparkline('spark-today', weekSeries.map(d=>d.kwh), 'var(--blue)'.trim());
+  makeSparkline('spark-avg', monthSeries.map(d=>d.kwh), '#b877d9');
+
+  // Courbe de charge
+  if (loadCurve.length) {
+    const ctx = document.getElementById('chart-loadcurve').getContext('2d');
+    const c = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: loadCurve.map(d => new Date(d.ts).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})),
+        datasets:[{
+          data: loadCurve.map(d=>d.watts),
+          borderColor:'#5794f2',
+          backgroundColor:'rgba(87,148,242,0.15)',
+          fill:true, tension:0.25, pointRadius:0, borderWidth:1.5
+        }]
+      },
+      options: baseLineOptions('W')
+    });
+    charts.push(c);
+  } else {
+    document.getElementById('chart-loadcurve').closest('.chart-wrap').innerHTML =
+      '<div class="empty-state">Pas de données de courbe de charge</div>';
+  }
+
+  // Conso quotidienne 30j (bar)
+  if (monthSeries.length) {
+    const ctx2 = document.getElementById('chart-daily').getContext('2d');
+    const c2 = new Chart(ctx2, {
+      type:'bar',
+      data:{
+        labels: monthSeries.map(d => new Date(d.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})),
+        datasets:[{
+          data: monthSeries.map(d=>d.kwh),
+          backgroundColor:'#73bf69', borderRadius:1, maxBarThickness:14
+        }]
+      },
+      options: baseBarOptions('kWh')
+    });
+    charts.push(c2);
+  } else {
+    document.getElementById('chart-daily').closest('.chart-wrap').innerHTML =
+      '<div class="empty-state">Pas de données mensuelles</div>';
+  }
+
+  // 7 derniers jours
+  if (weekSeries.length) {
+    const ctx3 = document.getElementById('chart-week').getContext('2d');
+    const c3 = new Chart(ctx3, {
+      type:'bar',
+      data:{
+        labels: weekSeries.map(d => new Date(d.date).toLocaleDateString('fr-FR',{weekday:'short'})),
+        datasets:[{ data: weekSeries.map(d=>d.kwh), backgroundColor:'#ff9830', borderRadius:1 }]
+      },
+      options: baseBarOptions('kWh')
+    });
+    charts.push(c3);
+  } else {
+    document.getElementById('chart-week').closest('.chart-wrap').innerHTML =
+      '<div class="empty-state">Pas de données</div>';
+  }
+}
+
+function renderContractTable(data){
+  const c = data.contract;
+  const id = data.identity;
+  if (!c && !id) return '<div class="empty-state">Pas d\\'info contrat</div>';
+  const rows = [];
+  if (id && id.firstname) rows.push(['Titulaire', `${id.firstname||''} ${id.lastname||''}`]);
+  if (Array.isArray(c)) {
+    const contract = c[0] || {};
+    if (contract.subscribed_power) rows.push(['Puissance souscrite', contract.subscribed_power]);
+    if (contract.offpeak_hours) rows.push(['Heures creuses', contract.offpeak_hours]);
+    if (contract.last_activation_date) rows.push(['Activation', contract.last_activation_date]);
+    if (contract.segment) rows.push(['Segment', contract.segment]);
+  } else if (c) {
+    Object.entries(c).slice(0,6).forEach(([k,v]) => {
+      if (typeof v === 'string' || typeof v === 'number') rows.push([k, v]);
+    });
+  }
+  if (!rows.length) return '<div class="empty-state">Données contrat indisponibles</div>';
+  return `<table><tbody>
+    ${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+function renderExtremesTable(data){
+  const m = data.month;
+  if (!m) return '<div class="empty-state">--</div>';
+  const rows = [
+    ['Jour max', m.max_day ? `${fmt(m.max_day.kwh)} kWh` : '--', m.max_day ? new Date(m.max_day.date).toLocaleDateString('fr-FR') : ''],
+    ['Jour min', m.min_day ? `${fmt(m.min_day.kwh)} kWh` : '--', m.min_day ? new Date(m.min_day.date).toLocaleDateString('fr-FR') : ''],
+    ['Total 30j', `${fmt(m.total_kwh)} kWh`, ''],
+    ['Total 7j', data.week ? `${fmt(data.week.total_kwh)} kWh` : '--', ''],
+  ];
+  return `<table><thead><tr><th>Metrique</th><th>Valeur</th><th>Date</th></tr></thead><tbody>
+    ${rows.map(([k,v,d])=>`<tr><td>${k}</td><td class="mono">${v}</td><td class="mono">${d}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+function makeSparkline(id, values, color){
+  const el = document.getElementById(id);
+  if (!el || !values.length) return;
+  const c = new Chart(el.getContext('2d'), {
+    type:'line',
+    data:{ labels: values.map((_,i)=>i), datasets:[{
+      data: values, borderColor: color, borderWidth:1.5,
+      pointRadius:0, tension:0.3, fill:false
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{enabled:false}},
+      scales:{ x:{display:false}, y:{display:false} },
+      elements:{ line:{ borderJoinStyle:'round' } }
+    }
+  });
+  charts.push(c);
+}
+
+function baseLineOptions(unit){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index', intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#181b1f', borderColor:'#2c3235', borderWidth:1,
+        titleColor:'#d8d9da', bodyColor:'#d8d9da',
+        callbacks:{ label: ctx => ctx.parsed.y + ' ' + unit }
+      }
+    },
+    scales:{
+      x:{ grid:{color:GRID_COLOR, drawTicks:false}, ticks:{maxTicksLimit:8, color:'#6a6f76'} },
+      y:{ grid:{color:GRID_COLOR, drawTicks:false}, ticks:{color:'#6a6f76'} }
+    }
+  };
+}
+
+function baseBarOptions(unit){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#181b1f', borderColor:'#2c3235', borderWidth:1,
+        titleColor:'#d8d9da', bodyColor:'#d8d9da',
+        callbacks:{ label: ctx => ctx.parsed.y + ' ' + unit }
+      }
+    },
+    scales:{
+      x:{ grid:{display:false}, ticks:{maxTicksLimit:10, color:'#6a6f76'} },
+      y:{ grid:{color:GRID_COLOR}, ticks:{color:'#6a6f76'} }
+    }
+  };
+}
+
+document.getElementById('loadBtn').addEventListener('click', loadData);
+document.getElementById('srcInput').addEventListener('keydown', e => { if (e.key==='Enter') loadData(); });
+
+// Auto-load on open (works when hosted next to data.json)
+loadData();
+</script>
+</body>
+</html>
