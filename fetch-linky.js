@@ -74,6 +74,41 @@ function isOffpeak(date, ranges) {
   });
 }
 
+// Tarif Bleu EDF réglementé (option HP/HC, >=9kVA) au 1er août 2026.
+// À AJUSTER si tu es sur une offre de marché plutôt que le tarif réglementé.
+const TARIFF = {
+  hp_price: 0.2065,
+  hc_price: 0.1579,
+  subscription_monthly: 19.2,
+  hc_pct_estimate: 30, // hypothèse si la courbe de charge n'est pas encore active
+};
+
+function estimateBill(monthTotalKwh, hphc) {
+  if (!monthTotalKwh) return null;
+  let hcKwh, hpKwh, source;
+  if (hphc && hphc.hc_pct != null) {
+    hcKwh = monthTotalKwh * (hphc.hc_pct / 100);
+    source = "measured";
+  } else {
+    hcKwh = monthTotalKwh * (TARIFF.hc_pct_estimate / 100);
+    source = "estimated";
+  }
+  hpKwh = monthTotalKwh - hcKwh;
+  const hpEur = hpKwh * TARIFF.hp_price;
+  const hcEur = hcKwh * TARIFF.hc_price;
+  const totalEur = hpEur + hcEur + TARIFF.subscription_monthly;
+  return {
+    source, // "measured" (courbe de charge réelle) ou "estimated" (hypothèse HC 30%)
+    period_days: 30,
+    hp_kwh: Math.round(hpKwh * 100) / 100,
+    hc_kwh: Math.round(hcKwh * 100) / 100,
+    hp_eur: Math.round(hpEur * 100) / 100,
+    hc_eur: Math.round(hcEur * 100) / 100,
+    subscription_eur: TARIFF.subscription_monthly,
+    total_eur: Math.round(totalEur * 100) / 100,
+  };
+}
+
 async function main() {
   const today = new Date();
   const start30 = new Date(today);
@@ -138,7 +173,9 @@ async function main() {
     watts: Math.round(parseFloat(r.value) * 2),
   }));
 
-  const currentPower = loadCurveSeries.length ? loadCurveSeries[loadCurveSeries.length - 1] : null;
+  // Attention : ce n'est PAS une puissance "en temps réel". Enedis publie la courbe de
+  // charge avec un décalage (souvent J-1 ou J-2) : c'est le dernier point CONNU, pas l'instant présent.
+  const lastKnownPower = loadCurveSeries.length ? loadCurveSeries[loadCurveSeries.length - 1] : null;
 
   // On garde 2 jours pour l'export (poids du JSON), le HP/HC est calculé sur les 30j.
   const loadCurve48h = loadCurveSeries.slice(-96);
@@ -178,7 +215,10 @@ async function main() {
 
     today: { date: todayStr, date_fr: dateFr(todayStr), kwh: todayKwh },
     yesterday: { kwh: yesterdayKwh },
-    current_power_watts: currentPower ? currentPower.watts : null,
+    // Dernière puissance CONNUE (pas temps réel, voir commentaire plus haut)
+    last_known_power: lastKnownPower
+      ? { watts: lastKnownPower.watts, ts: lastKnownPower.ts, ts_fr: datetimeFr(lastKnownPower.ts) }
+      : null,
     peak_power: peakPower ? { date: peakPower.date, date_fr: peakPower.date_fr, watts: peakPower.watts } : null,
 
     week: {
@@ -195,6 +235,8 @@ async function main() {
     },
 
     hphc: hphc,
+
+    estimated_bill: estimateBill(Math.round(total30 * 100) / 100, hphc),
 
     load_curve_48h: loadCurve48h,
   };
