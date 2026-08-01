@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-01T21:34:56.900Z",
-  "generated_at_fr": "01/08 21h34",
+  "generated_at": "2026-08-01T21:52:43.389Z",
+  "generated_at_fr": "01/08 21h52",
   "pdl": "23252966652215",
   "contract": {
     "segment": "C5",
@@ -352,5 +352,149 @@
     "subscription_eur": 19.2,
     "total_eur": 142.69
   },
-  "load_curve_48h": []
+  "load_curve_48h": [],
+  "charts": {
+    "daily_14": {
+      "width": 760,
+      "height": 90,
+      "bars": [
+        {
+          "x": 0,
+          "y": 16,
+          "w": 49,
+          "h": 74,
+          "value": 20.765,
+          "label": "18/07",
+          "highlight": false
+        },
+        {
+          "x": 55,
+          "y": 1,
+          "w": 49,
+          "h": 89,
+          "value": 24.941,
+          "label": "19/07",
+          "highlight": false
+        },
+        {
+          "x": 109,
+          "y": 13,
+          "w": 49,
+          "h": 77,
+          "value": 21.537,
+          "label": "20/07",
+          "highlight": false
+        },
+        {
+          "x": 164,
+          "y": 16,
+          "w": 49,
+          "h": 74,
+          "value": 20.708,
+          "label": "21/07",
+          "highlight": false
+        },
+        {
+          "x": 219,
+          "y": 12,
+          "w": 49,
+          "h": 78,
+          "value": 21.785,
+          "label": "22/07",
+          "highlight": false
+        },
+        {
+          "x": 274,
+          "y": 27,
+          "w": 49,
+          "h": 63,
+          "value": 17.776,
+          "label": "23/07",
+          "highlight": false
+        },
+        {
+          "x": 328,
+          "y": 2,
+          "w": 49,
+          "h": 88,
+          "value": 24.774,
+          "label": "24/07",
+          "highlight": false
+        },
+        {
+          "x": 383,
+          "y": 25,
+          "w": 49,
+          "h": 65,
+          "value": 18.369,
+          "label": "25/07",
+          "highlight": false
+        },
+        {
+          "x": 438,
+          "y": 46,
+          "w": 49,
+          "h": 44,
+          "value": 12.395,
+          "label": "26/07",
+          "highlight": false
+        },
+        {
+          "x": 492,
+          "y": 31,
+          "w": 49,
+          "h": 59,
+          "value": 16.498,
+          "label": "27/07",
+          "highlight": false
+        },
+        {
+          "x": 547,
+          "y": 31,
+          "w": 49,
+          "h": 59,
+          "value": 16.563,
+          "label": "28/07",
+          "highlight": false
+        },
+        {
+          "x": 602,
+          "y": 0,
+          "w": 49,
+          "h": 90,
+          "value": 25.246,
+          "label": "29/07",
+          "highlight": true
+        },
+        {
+          "x": 657,
+          "y": 13,
+          "w": 49,
+          "h": 77,
+          "value": 21.72,
+          "label": "30/07",
+          "highlight": false
+        },
+        {
+          "x": 711,
+          "y": 17,
+          "w": 49,
+          "h": 73,
+          "value": 20.576,
+          "label": "31/07",
+          "highlight": false
+        }
+      ],
+      "max_value": 25.25
+    },
+    "load_curve": null,
+    "hphc_bar": {
+      "measured": false,
+      "hp_pct": 70,
+      "hc_pct": 30,
+      "hp_width": 532,
+      "hc_width": 228,
+      "hc_x": 532
+    }
+  }
 }
