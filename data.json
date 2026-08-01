@@ -1,5 +1,6 @@
 {
-  "generated_at": "2026-08-01T19:34:41.639Z",
+  "generated_at": "2026-08-01T20:23:11.951Z",
+  "generated_at_fr": "01/08 20h23",
   "pdl": "23252966652215",
   "contract": {
     "segment": "C5",
@@ -29,8 +30,19 @@
     "country": "France",
     "geo_points": {}
   },
+  "offpeak_ranges": [
+    {
+      "startMin": 62,
+      "endMin": 362
+    },
+    {
+      "startMin": 842,
+      "endMin": 1022
+    }
+  ],
   "today": {
     "date": "2026-08-01",
+    "date_fr": "1 août",
     "kwh": 20.576
   },
   "yesterday": {
@@ -39,6 +51,7 @@
   "current_power_watts": null,
   "peak_power": {
     "date": "2026-07-15 18:55:26",
+    "date_fr": "15 juil",
     "watts": 6330
   },
   "week": {
@@ -47,30 +60,44 @@
     "series": [
       {
         "date": "2026-07-25",
+        "date_fr": "25 juil",
+        "weekday_fr": "sam",
         "kwh": 18.369
       },
       {
         "date": "2026-07-26",
+        "date_fr": "26 juil",
+        "weekday_fr": "dim",
         "kwh": 12.395
       },
       {
         "date": "2026-07-27",
+        "date_fr": "27 juil",
+        "weekday_fr": "lun",
         "kwh": 16.498
       },
       {
         "date": "2026-07-28",
+        "date_fr": "28 juil",
+        "weekday_fr": "mar",
         "kwh": 16.563
       },
       {
         "date": "2026-07-29",
+        "date_fr": "29 juil",
+        "weekday_fr": "mer",
         "kwh": 25.246
       },
       {
         "date": "2026-07-30",
+        "date_fr": "30 juil",
+        "weekday_fr": "jeu",
         "kwh": 21.72
       },
       {
         "date": "2026-07-31",
+        "date_fr": "31 juil",
+        "weekday_fr": "ven",
         "kwh": 20.576
       }
     ]
@@ -80,134 +107,199 @@
     "avg_kwh_per_day": 21.45,
     "max_day": {
       "date": "2026-07-15",
+      "date_fr": "15 juil",
+      "weekday_fr": "mer",
       "kwh": 31.368
     },
     "min_day": {
       "date": "2026-07-26",
+      "date_fr": "26 juil",
+      "weekday_fr": "dim",
       "kwh": 12.395
     },
     "series": [
       {
         "date": "2026-07-02",
+        "date_fr": "2 juil",
+        "weekday_fr": "jeu",
         "kwh": 15.373
       },
       {
         "date": "2026-07-03",
+        "date_fr": "3 juil",
+        "weekday_fr": "ven",
         "kwh": 18.968
       },
       {
         "date": "2026-07-04",
+        "date_fr": "4 juil",
+        "weekday_fr": "sam",
         "kwh": 16.932
       },
       {
         "date": "2026-07-05",
+        "date_fr": "5 juil",
+        "weekday_fr": "dim",
         "kwh": 19.602
       },
       {
         "date": "2026-07-06",
+        "date_fr": "6 juil",
+        "weekday_fr": "lun",
         "kwh": 19.464
       },
       {
         "date": "2026-07-07",
+        "date_fr": "7 juil",
+        "weekday_fr": "mar",
         "kwh": 20.533
       },
       {
         "date": "2026-07-08",
+        "date_fr": "8 juil",
+        "weekday_fr": "mer",
         "kwh": 21.688
       },
       {
         "date": "2026-07-09",
+        "date_fr": "9 juil",
+        "weekday_fr": "jeu",
         "kwh": 23.705
       },
       {
         "date": "2026-07-10",
+        "date_fr": "10 juil",
+        "weekday_fr": "ven",
         "kwh": 22.278
       },
       {
         "date": "2026-07-11",
+        "date_fr": "11 juil",
+        "weekday_fr": "sam",
         "kwh": 22.223
       },
       {
         "date": "2026-07-12",
+        "date_fr": "12 juil",
+        "weekday_fr": "dim",
         "kwh": 30.011
       },
       {
         "date": "2026-07-13",
+        "date_fr": "13 juil",
+        "weekday_fr": "lun",
         "kwh": 22.088
       },
       {
         "date": "2026-07-14",
+        "date_fr": "14 juil",
+        "weekday_fr": "mar",
         "kwh": 27.138
       },
       {
         "date": "2026-07-15",
+        "date_fr": "15 juil",
+        "weekday_fr": "mer",
         "kwh": 31.368
       },
       {
         "date": "2026-07-16",
+        "date_fr": "16 juil",
+        "weekday_fr": "jeu",
         "kwh": 24.716
       },
       {
         "date": "2026-07-17",
+        "date_fr": "17 juil",
+        "weekday_fr": "ven",
         "kwh": 23.727
       },
       {
         "date": "2026-07-18",
+        "date_fr": "18 juil",
+        "weekday_fr": "sam",
         "kwh": 20.765
       },
       {
         "date": "2026-07-19",
+        "date_fr": "19 juil",
+        "weekday_fr": "dim",
         "kwh": 24.941
       },
       {
         "date": "2026-07-20",
+        "date_fr": "20 juil",
+        "weekday_fr": "lun",
         "kwh": 21.537
       },
       {
         "date": "2026-07-21",
+        "date_fr": "21 juil",
+        "weekday_fr": "mar",
         "kwh": 20.708
       },
       {
         "date": "2026-07-22",
+        "date_fr": "22 juil",
+        "weekday_fr": "mer",
         "kwh": 21.785
       },
       {
         "date": "2026-07-23",
+        "date_fr": "23 juil",
+        "weekday_fr": "jeu",
         "kwh": 17.776
       },
       {
         "date": "2026-07-24",
+        "date_fr": "24 juil",
+        "weekday_fr": "ven",
         "kwh": 24.774
       },
       {
         "date": "2026-07-25",
+        "date_fr": "25 juil",
+        "weekday_fr": "sam",
         "kwh": 18.369
       },
       {
         "date": "2026-07-26",
+        "date_fr": "26 juil",
+        "weekday_fr": "dim",
         "kwh": 12.395
       },
       {
         "date": "2026-07-27",
+        "date_fr": "27 juil",
+        "weekday_fr": "lun",
         "kwh": 16.498
       },
       {
         "date": "2026-07-28",
+        "date_fr": "28 juil",
+        "weekday_fr": "mar",
         "kwh": 16.563
       },
       {
         "date": "2026-07-29",
+        "date_fr": "29 juil",
+        "weekday_fr": "mer",
         "kwh": 25.246
       },
       {
         "date": "2026-07-30",
+        "date_fr": "30 juil",
+        "weekday_fr": "jeu",
         "kwh": 21.72
       },
       {
         "date": "2026-07-31",
+        "date_fr": "31 juil",
+        "weekday_fr": "ven",
         "kwh": 20.576
       }
     ]
   },
+  "hphc": null,
   "load_curve_48h": []
 }
