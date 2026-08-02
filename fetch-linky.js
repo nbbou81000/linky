@@ -124,11 +124,14 @@ function buildBarChart(items, { width = 760, height = 90, gap = 6 } = {}) {
   const maxVal = Math.max(...items.map((d) => d.value), 0.001);
   const bars = items.map((d, i) => {
     const h = Math.max(2, Math.round((d.value / maxVal) * height));
+    const x = Math.round(i * (barW + gap));
+    const w = Math.round(barW);
     return {
-      x: Math.round(i * (barW + gap)),
+      x,
       y: height - h,
-      w: Math.round(barW),
+      w,
       h,
+      cx: Math.round(x + w / 2), // centre horizontal pré-calculé pour les <text>
       value: d.value,
       label: d.label,
       highlight: !!d.highlight,
