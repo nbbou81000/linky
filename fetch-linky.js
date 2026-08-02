@@ -177,6 +177,32 @@ function buildHphcBar(hphc, monthTotal, tariffHcPctEstimate, { width = 760 } = {
   };
 }
 
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+// L'endpoint consumption_load_curve refuse plus de 7 jours consécutifs par requête
+// (contrairement à daily_consumption qui accepte 30j) : on découpe en tranches.
+async function fetchLoadCurveChunked(pdl, startDate, endDate) {
+  const readings = [];
+  let chunkStart = new Date(startDate);
+  const end = new Date(endDate);
+  while (chunkStart < end) {
+    let chunkEnd = addDays(chunkStart, 7);
+    if (chunkEnd > end) chunkEnd = end;
+    const startStr = fmtDate(chunkStart);
+    const endStr = fmtDate(chunkEnd);
+    console.log(`Fetching load curve chunk ${startStr} -> ${endStr}...`);
+    const res = await medFetch(`/consumption_load_curve/${pdl}/start/${startStr}/end/${endStr}`);
+    const chunkReadings = res?.meter_reading?.interval_reading || [];
+    readings.push(...chunkReadings);
+    chunkStart = chunkEnd;
+  }
+  return readings;
+}
+
 async function main() {
   const today = new Date();
   const start30 = new Date(today);
@@ -199,8 +225,8 @@ async function main() {
   console.log("Fetching daily consumption max power (30j)...");
   const dailyMaxPower = await medFetch(`/daily_consumption_max_power/${PDL}/start/${startStr30}/end/${todayStr}`);
 
-  console.log("Fetching load curve (30j, pas 30min)...");
-  const loadCurve = await medFetch(`/consumption_load_curve/${PDL}/start/${startStr30}/end/${todayStr}`);
+  console.log("Fetching load curve (30j, pas 30min, par tranches de 7j)...");
+  const loadCurveReadings = await fetchLoadCurveChunked(PDL, start30, today);
 
   // --- Consommation quotidienne ---
   const dailyReadings = dailyConso?.meter_reading?.interval_reading || [];
@@ -240,7 +266,6 @@ async function main() {
   const peakPower = maxPowerSeries.reduce((max, d) => (d.watts > (max?.watts ?? -1) ? d : max), null);
 
   // --- Courbe de charge (30 derniers jours, pas 30 min) ---
-  const loadCurveReadings = loadCurve?.meter_reading?.interval_reading || [];
   const loadCurveSeries = loadCurveReadings.map((r) => ({
     ts: r.date,
     watts: Math.round(parseFloat(r.value) * 2),
