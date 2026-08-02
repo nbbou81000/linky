@@ -24,10 +24,10 @@ jobs:
           MED_PDL: ${{ secrets.MED_PDL }}
         run: node fetch-linky.js
 
-      - name: Commit data.json
+      - name: Commit data.json + history.json
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add data.json
-          git diff --staged --quiet || git commit -m "Update Linky data.json"
+          git add data.json history.json
+          git diff --staged --quiet || git commit -m "Update Linky data.json + history.json"
           git push
