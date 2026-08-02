@@ -933,11 +933,13 @@ async function renderExtras(data){
         </div>
       ` : '<div class="empty-state">Données insuffisantes</div>')}
     </div>
-    <div class="row row--split2">
+    <div class="row row--main">
       ${panel("Export des données", "var(--yellow)", `
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Télécharge les 30 derniers jours (date, kWh) au format CSV.</div>
         <button class="btn-refresh" id="btn-csv">⬇ Télécharger le CSV</button>
       `)}
+    </div>
+    <div class="row row--main">
       ${panel("Historique accumulé", "var(--purple)", '<div id="history-box"><div class="empty-state">Chargement de l\u2019historique…</div></div>')}
     </div>
   `;
@@ -982,7 +984,28 @@ async function renderExtras(data){
   if (!history || !history.length) {
     historyBox.innerHTML = '<div class="empty-state">Pas encore d\u2019historique accumulé — il se construit un jour à la fois à chaque exécution du script. Reviens dans quelques semaines.</div>';
   } else {
-    historyBox.innerHTML = `<div class="chart-wrap small"><canvas id="chart-history"></canvas></div><div style="font-size:10px;color:var(--text-dim);margin-top:6px;">${history.length} jour(s) accumulé(s) depuis le début du suivi.</div>`;
+    // Coût du jour : HP/HC réel si connu pour ce jour-là (hc_pct), sinon estimation par défaut
+    function dailyCost(h){
+      const hcPct = h.hc_pct != null ? h.hc_pct : DEFAULT_TARIFF.hc_pct_estimate;
+      const hcKwh = h.kwh * (hcPct / 100);
+      const hpKwh = h.kwh - hcKwh;
+      return hpKwh * DEFAULT_TARIFF.hp_price + hcKwh * DEFAULT_TARIFF.hc_price;
+    }
+    const historyWithCost = history.map(h => ({ ...h, eur: dailyCost(h) }));
+    const totalEur = historyWithCost.reduce((a, h) => a + h.eur, 0);
+
+    historyBox.innerHTML = `
+      <div class="chart-wrap small"><canvas id="chart-history"></canvas></div>
+      <div style="font-size:10px;color:var(--text-dim);margin:6px 0 10px;">${history.length} jour(s) accumulé(s) depuis le début du suivi · total énergie ${euro(totalEur)} (hors abonnement, prix HP/HC courants appliqués rétroactivement)</div>
+      <div class="table-scroll" style="max-height:200px;">
+        <table>
+          <thead><tr><th>Date</th><th>kWh</th><th>Coût</th></tr></thead>
+          <tbody>${historyWithCost.slice().reverse().map(h => `
+            <tr><td>${h.date}</td><td class="mono">${fmt(h.kwh)}</td><td class="mono">${euro(h.eur)}${h.hc_pct == null ? ' <span class="badge warn" style="font-size:9px;">est.</span>' : ''}</td></tr>
+          `).join('')}</tbody>
+        </table>
+      </div>
+    `;
     const ctx = document.getElementById("chart-history").getContext("2d");
     charts.push(new Chart(ctx, {
       type: "line",
