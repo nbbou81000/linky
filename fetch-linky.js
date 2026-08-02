@@ -239,6 +239,18 @@ function updateHistory(lastKnownDay, hphc) {
 }
 
 async function main() {
+  // On relit l'ancien data.json (s'il existe) pour pouvoir réutiliser la courbe de charge / HP/HC /
+  // dernière puissance en cas d'échec du fetch (quota MyElectricalData atteint, etc.) plutôt que
+  // d'écraser avec du vide.
+  let previousData = null;
+  try {
+    if (fs.existsSync("data.json")) {
+      previousData = JSON.parse(fs.readFileSync("data.json", "utf8"));
+    }
+  } catch (e) {
+    console.warn("⚠️  Impossible de lire l'ancien data.json:", e.message);
+  }
+
   const today = new Date();
   const start30 = new Date(today);
   start30.setDate(start30.getDate() - 30);
@@ -341,6 +353,29 @@ async function main() {
     };
   }
 
+  const lastKnownPowerObj = lastKnownPower
+    ? { watts: lastKnownPower.watts, ts: lastKnownPower.ts, ts_fr: datetimeFr(lastKnownPower.ts) }
+    : null;
+
+  // --- Repli sur le cache si la courbe de charge n'a pas pu être récupérée (quota atteint, etc.) ---
+  // On garde les dernières bonnes données plutôt que d'écraser avec du vide.
+  let effectiveLoadCurve48h = loadCurve48h;
+  let effectiveHphc = hphc;
+  let effectiveLastKnownPower = lastKnownPowerObj;
+  let loadCurveCache = null;
+  if (!loadCurveReadings.length && previousData && previousData.load_curve_48h && previousData.load_curve_48h.length) {
+    console.log(`ℹ️  Courbe de charge vide sur cet appel${rateLimited ? " (quota atteint)" : ""} : réutilisation des dernières données connues du ${previousData.generated_at_fr || previousData.generated_at}.`);
+    effectiveLoadCurve48h = previousData.load_curve_48h;
+    effectiveHphc = previousData.hphc || null;
+    effectiveLastKnownPower = previousData.last_known_power || null;
+    loadCurveCache = {
+      stale: true,
+      reason: rateLimited ? "quota" : "no_data",
+      cached_at: previousData.generated_at,
+      cached_at_fr: previousData.generated_at_fr || null,
+    };
+  }
+
   // --- Assemblage du data.json ---
   const data = {
     generated_at: new Date().toISOString(),
@@ -357,9 +392,7 @@ async function main() {
       : null,
     yesterday: { kwh: yesterdayKwh },
     // Dernière puissance CONNUE (pas temps réel, voir commentaire plus haut)
-    last_known_power: lastKnownPower
-      ? { watts: lastKnownPower.watts, ts: lastKnownPower.ts, ts_fr: datetimeFr(lastKnownPower.ts) }
-      : null,
+    last_known_power: effectiveLastKnownPower,
     peak_power: peakPower ? { date: peakPower.date, date_fr: peakPower.date_fr, watts: peakPower.watts } : null,
 
     week: {
@@ -375,11 +408,12 @@ async function main() {
       series: last30,
     },
 
-    hphc: hphc,
+    hphc: effectiveHphc,
+    load_curve_cache: loadCurveCache, // non-null si on affiche des données de courbe de charge périmées (cache)
 
-    estimated_bill: estimateBill(Math.round(total30 * 100) / 100, hphc),
+    estimated_bill: estimateBill(Math.round(total30 * 100) / 100, effectiveHphc),
 
-    load_curve_48h: loadCurve48h,
+    load_curve_48h: effectiveLoadCurve48h,
 
     // Géométrie SVG prête à l'emploi pour le mode "graphiques" du plugin (aucun calcul côté Liquid)
     charts: {
@@ -391,10 +425,10 @@ async function main() {
         }
         return buildBarChart(items, { width: 760, height: 90, gap: 6 });
       })(),
-      load_curve: loadCurve48h.length
-        ? buildLineChart(loadCurve48h.map((p) => ({ value: p.watts })), { width: 760, height: 95 })
+      load_curve: effectiveLoadCurve48h.length
+        ? buildLineChart(effectiveLoadCurve48h.map((p) => ({ value: p.watts })), { width: 760, height: 95 })
         : null,
-      hphc_bar: buildHphcBar(hphc, Math.round(total30 * 100) / 100, TARIFF.hc_pct_estimate, { width: 760 }),
+      hphc_bar: buildHphcBar(effectiveHphc, Math.round(total30 * 100) / 100, TARIFF.hc_pct_estimate, { width: 760 }),
     },
   };
 
@@ -406,7 +440,11 @@ async function main() {
     console.log(`⚠️  Dernier jour disponible = J-${dataLagDays} (Enedis publie normalement en J+1). Le cron tourne peut-être trop tôt, ou Enedis a du retard aujourd'hui.`);
   }
   if (!loadCurveReadings.length) {
-    console.log("ℹ️  Courbe de charge vide : active la 'collecte enrichie' sur myelectricaldata.fr (24-48h de délai après activation).");
+    if (loadCurveCache) {
+      console.log(`ℹ️  Courbe de charge non récupérée cette fois (${loadCurveCache.reason === "quota" ? "quota atteint" : "pas de données"}) — données du ${loadCurveCache.cached_at_fr} réutilisées.`);
+    } else {
+      console.log("ℹ️  Courbe de charge vide : active la 'collecte enrichie' sur myelectricaldata.fr (24-48h de délai après activation).");
+    }
   }
 }
 

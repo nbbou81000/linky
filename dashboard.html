@@ -274,7 +274,7 @@ function renderOverview(data){
         data.month ? `<div class="stat-delta" style="color:var(--text-dim)">Total : ${fmt(data.month.total_kwh)} kWh</div>` : '', 'spark-avg')}
     </div>
     <div class="row row--main">
-      ${panel('Courbe de charge · 48 dernières heures (W)', 'var(--blue)', '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
+      ${panel('Courbe de charge · 48 dernières heures (W)' + (data.load_curve_cache && data.load_curve_cache.stale ? ` <span class="badge warn">cache du ${data.load_curve_cache.cached_at_fr}</span>` : ''), 'var(--blue)', '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
     </div>
     <div class="row row--split">
       ${panel('Consommation quotidienne · 30 jours (kWh)', 'var(--green)', '<div class="chart-wrap"><canvas id="chart-daily"></canvas></div>')}
