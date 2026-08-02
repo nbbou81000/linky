@@ -232,7 +232,7 @@ function renderAll(){
   const data = currentData;
   document.getElementById('subtitle').textContent =
     'Maj ' + (data.generated_at_fr || (data.generated_at ? new Date(data.generated_at).toLocaleString('fr-FR') : '--')) +
-    (data.pdl ? ' · PDL ' + data.pdl.slice(0,4) + '••••••••••' : '');
+    (data.pdl ? ' · PDL ' + data.pdl : '');
 
   destroyCharts();
   document.getElementById('dashboard').innerHTML = ''; // nettoyage complet (plus de résidu "Chargement…")
@@ -278,7 +278,7 @@ function renderOverview(data){
     </div>
     <div class="row row--split">
       ${panel('Consommation quotidienne · 30 jours (kWh)', 'var(--green)', '<div class="chart-wrap"><canvas id="chart-daily"></canvas></div>')}
-      ${panel('Contrat & identité', 'var(--yellow)', renderContractTable(data))}
+      ${panel('Contrat & tarification', 'var(--yellow)', renderContractTable(data))}
     </div>
     <div class="row row--split2">
       ${panel('Extremes du mois', 'var(--red)', renderExtremesTable(data))}
@@ -326,15 +326,19 @@ function renderOverview(data){
 
 function renderContractTable(data){
   const c = data.contract;
-  const id = data.identity;
+  const addr = data.address;
   const rows = [];
-  const person = id && id.identity && id.identity.natural_person;
-  if (person) rows.push(['Titulaire', `${person.title||''} ${person.firstname||''} ${person.lastname||''}`]);
   if (c) {
-    if (c.subscribed_power) rows.push(['Puissance souscrite', c.subscribed_power]);
+    rows.push(['Option tarifaire', c.offpeak_hours ? 'Heures Pleines / Heures Creuses' : 'Base']);
     if (c.offpeak_hours) rows.push(['Heures creuses', c.offpeak_hours]);
-    if (c.segment) rows.push(['Segment', c.segment]);
-    if (c.last_activation_date) rows.push(['Activation', c.last_activation_date]);
+    if (c.subscribed_power) rows.push(['Puissance souscrite', c.subscribed_power]);
+  }
+  if (addr && (addr.city || addr.postal_code)) {
+    rows.push(['Zone', [addr.postal_code, addr.city].filter(Boolean).join(' ')]);
+  }
+  rows.push(['Prix HP / HC utilisés', `${DEFAULT_TARIFF.hp_price} € / ${DEFAULT_TARIFF.hc_price} € par kWh`]);
+  if (data.last_known_day && data.last_known_day.lag_days != null) {
+    rows.push(['Fraîcheur des données', `J-${data.last_known_day.lag_days} (délai de publication Enedis)`]);
   }
   if (!rows.length) return '<div class="empty-state">Données contrat indisponibles</div>';
   return `<table><tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}</tbody></table>`;
@@ -488,15 +492,14 @@ function renderProjectionTable(data){
 // ============================================================
 function renderDetails(data){
   const monthSeries = (data.month && data.month.series) || [];
-  const addr = data.address;
 
   const page = document.createElement('div');
   page.className = 'tabpage';
   page.id = 'page-details';
   page.innerHTML = `
     <div class="row row--split2">
-      ${panel('Adresse du point de livraison', 'var(--blue)', renderAddressTable(addr))}
-      ${panel('Contrat complet', 'var(--yellow)', renderFullContractTable(data.contract))}
+      ${panel('Zone géographique', 'var(--blue)', renderAddressTable(data.address))}
+      ${panel('À propos de ce tableau de bord', 'var(--yellow)', renderAboutPanel(data))}
     </div>
     <div class="row row--main">
       ${panel('Historique complet · 30 jours', 'var(--green)', `
@@ -515,21 +518,22 @@ function renderDetails(data){
 }
 
 function renderAddressTable(addr){
-  if (!addr) return '<div class="empty-state">Adresse indisponible</div>';
+  if (!addr || (!addr.city && !addr.postal_code)) return '<div class="empty-state">Zone indisponible</div>';
   const rows = [
-    ['Rue', addr.street],
     ['Code postal', addr.postal_code],
     ['Ville', addr.city],
-    ['Code INSEE', addr.insee_code],
-    ['Pays', addr.country],
   ].filter(([,v])=>v);
-  return `<table><tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}</tbody></table>`;
+  return `<table><tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}</tbody></table>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Ville/code postal uniquement, utilisés pour corréler la conso à la météo locale (onglet Météo &amp; Usages). L'adresse exacte n'est jamais exposée ici.</div>`;
 }
 
-function renderFullContractTable(c){
-  if (!c) return '<div class="empty-state">Contrat indisponible</div>';
-  const rows = Object.entries(c).filter(([,v]) => typeof v === 'string' || typeof v === 'number');
-  if (!rows.length) return '<div class="empty-state">--</div>';
+function renderAboutPanel(data){
+  const rows = [
+    ['Source des données', 'MyElectricalData (passerelle Enedis)'],
+    ['Mise à jour', 'Automatique, ~1×/jour'],
+    ['Fenêtre affichée', '30 derniers jours glissants'],
+    ['Confidentialité', 'Nom, adresse exacte et n° de contrat ne sont jamais exposés dans les données publiques de cette page.'],
+  ];
   return `<table><tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="mono">${v}</td></tr>`).join('')}</tbody></table>`;
 }
 

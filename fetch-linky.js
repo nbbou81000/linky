@@ -394,6 +394,90 @@ async function buildWeatherInsight(address, dailySeries, blendedPrice) {
   }
 }
 
+// --- Écran dédié "Courbe 48h" : géométrie riche (lissage, bandes jour/nuit, marqueurs min/max,
+// repère minuit) précalculée pour un rendu SVG élégant sans JS côté écran.
+function smoothPath(coords) {
+  if (coords.length < 3) {
+    return coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x},${c.y}`).join(" ");
+  }
+  let d = `M${coords[0].x},${coords[0].y}`;
+  for (let i = 1; i < coords.length - 1; i++) {
+    const midX = (coords[i].x + coords[i + 1].x) / 2;
+    const midY = (coords[i].y + coords[i + 1].y) / 2;
+    d += ` Q${coords[i].x},${coords[i].y} ${midX},${midY}`;
+  }
+  const last = coords[coords.length - 1];
+  d += ` L${last.x},${last.y}`;
+  return d;
+}
+
+function buildLoadCurveDetail(loadCurve48h, { width = 760, height = 300, padding = 10 } = {}) {
+  const n = loadCurve48h.length;
+  if (n < 4) return null;
+
+  const values = loadCurve48h.map((p) => p.watts);
+  const minV = Math.min(...values);
+  const maxV = Math.max(...values);
+  const range = maxV - minV || 1;
+  const avgV = Math.round(values.reduce((a, b) => a + b, 0) / n);
+
+  const coords = loadCurve48h.map((p, i) => {
+    const x = Math.round((i / (n - 1)) * width);
+    const y = Math.round(height - padding - ((p.watts - minV) / range) * (height - 2 * padding));
+    return { x, y, watts: p.watts, ts: p.ts };
+  });
+
+  const linePath = smoothPath(coords);
+  const areaPath = `${linePath} L${coords[coords.length - 1].x},${height} L${coords[0].x},${height} Z`;
+
+  // Marqueurs min/max
+  const minIdx = values.indexOf(minV);
+  const maxIdx = values.indexOf(maxV);
+  const minPoint = { ...coords[minIdx], label_y: Math.min(height - padding, coords[minIdx].y + 18) };
+  const maxPoint = { ...coords[maxIdx], label_y: Math.max(padding + 12, coords[maxIdx].y - 10) };
+  const currentPoint = coords[coords.length - 1];
+
+  // Bandes nocturnes (22h-7h), pour le contexte visuel jour/nuit
+  const nightBands = [];
+  let bandStart = null;
+  coords.forEach((c, i) => {
+    const h = new Date(c.ts).getHours();
+    const isNight = h >= 22 || h < 7;
+    if (isNight && bandStart === null) bandStart = c.x;
+    if (!isNight && bandStart !== null) {
+      nightBands.push({ x: bandStart, w: c.x - bandStart });
+      bandStart = null;
+    }
+  });
+  if (bandStart !== null) nightBands.push({ x: bandStart, w: width - bandStart });
+
+  // Repère minuit (changement de jour), pour séparer "hier" / "aujourd'hui"
+  let dayBoundaryX = null;
+  for (let i = 1; i < coords.length; i++) {
+    const prevDate = new Date(coords[i - 1].ts).getDate();
+    const curDate = new Date(coords[i].ts).getDate();
+    if (prevDate !== curDate) {
+      dayBoundaryX = coords[i].x;
+      break;
+    }
+  }
+
+  return {
+    width,
+    height,
+    line_path: linePath,
+    area_path: areaPath,
+    min_value: minV,
+    max_value: maxV,
+    avg_value: avgV,
+    min_point: minPoint,
+    max_point: maxPoint,
+    current_point: currentPoint,
+    night_bands: nightBands,
+    day_boundary_x: dayBoundaryX,
+  };
+}
+
 async function main() {
   // On relit l'ancien data.json (s'il existe) pour pouvoir réutiliser la courbe de charge / HP/HC /
   // dernière puissance en cas d'échec du fetch (quota MyElectricalData atteint, etc.) plutôt que
@@ -416,8 +500,8 @@ async function main() {
   console.log("Fetching contract...");
   const contract = await medFetch(`/contracts/${PDL}/`);
 
-  console.log("Fetching identity...");
-  const identity = await medFetch(`/identity/${PDL}/`);
+  // Note : l'endpoint identity (nom/prénom du titulaire) n'est plus appelé — cette info
+  // n'est jamais exposée dans data.json (page publique), pas la peine de la récupérer.
 
   console.log("Fetching addresses...");
   const addresses = await medFetch(`/addresses/${PDL}/`);
@@ -532,14 +616,20 @@ async function main() {
     };
   }
 
-  // --- Assemblage du data.json ---
+  // --- Assemblage du data.json (page publique : on masque tout ce qui identifie la personne) ---
+  const fullAddress = addresses?.customer?.usage_points?.[0]?.usage_point?.usage_point_addresses || addresses || null;
+  const fullContract = contract?.customer?.usage_points?.[0]?.contracts || contract || null;
+
   const data = {
     generated_at: new Date().toISOString(),
     generated_at_fr: datetimeFr(new Date().toISOString()),
-    pdl: PDL,
-    contract: contract?.customer?.usage_points?.[0]?.contracts || contract || null,
-    identity: identity?.customer?.identity || identity || null,
-    address: addresses?.customer?.usage_points?.[0]?.usage_point?.usage_point_addresses || addresses || null,
+    pdl: PDL.slice(0, 4) + "••••••••••", // jamais le PDL complet dans le JSON public
+    // Uniquement les infos de contrat utiles au calcul HP/HC, pas de segment/statut/n° contrat
+    contract: fullContract
+      ? { offpeak_hours: fullContract.offpeak_hours || null, subscribed_power: fullContract.subscribed_power || null }
+      : null,
+    // Ville + code postal seulement (nécessaire pour la météo), jamais la rue ni le nom du titulaire
+    address: fullAddress ? { city: fullAddress.city || null, postal_code: fullAddress.postal_code || null } : null,
     offpeak_ranges: offpeakRanges,
 
     // "Dernier jour connu" avec sa vraie date Enedis (PAS forcément aujourd'hui : J+1 en théorie, parfois plus)
@@ -585,13 +675,14 @@ async function main() {
         ? buildLineChart(effectiveLoadCurve48h.map((p) => ({ value: p.watts })), { width: 760, height: 95 })
         : null,
       hphc_bar: buildHphcBar(effectiveHphc, Math.round(total30 * 100) / 100, TARIFF.hc_pct_estimate, { width: 760 }),
+      load_curve_detail: effectiveLoadCurve48h.length
+        ? buildLoadCurveDetail(effectiveLoadCurve48h, { width: 760, height: 300 })
+        : null,
     },
   };
 
-  const addressForWeather =
-    addresses?.customer?.usage_points?.[0]?.usage_point?.usage_point_addresses || addresses || null;
   console.log("Building weather insight (géocodage + Open-Meteo + régression)...");
-  data.weather_insight = await buildWeatherInsight(addressForWeather, last30, TARIFF.hp_price);
+  data.weather_insight = await buildWeatherInsight(fullAddress, last30, TARIFF.hp_price);
 
   updateHistory(data.last_known_day, effectiveHphc);
 
