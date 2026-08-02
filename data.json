@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-02T11:02:49.323Z",
-  "generated_at_fr": "02/08 11h02",
+  "generated_at": "2026-08-02T11:30:43.665Z",
+  "generated_at_fr": "02/08 11h30",
   "pdl": "23252966652215",
   "contract": {
     "segment": "C5",
@@ -351,7 +351,12 @@
     "hp_kwh": 48.83,
     "hc_pct": 29
   },
-  "load_curve_cache": null,
+  "load_curve_cache": {
+    "stale": true,
+    "reason": "quota",
+    "cached_at": "2026-08-02T11:02:49.323Z",
+    "cached_at_fr": "02/08 11h02"
+  },
   "estimated_bill": {
     "source": "measured",
     "period_days": 30,
@@ -912,5 +917,50 @@
       "hc_width": 220,
       "hc_x": 540
     }
+  },
+  "weather_insight": {
+    "hdd_base": 18,
+    "cdd_base": 24,
+    "heat_kwh": 0,
+    "cool_kwh": 129.6,
+    "base_kwh": 522.5,
+    "eur_per_degree_heat": 0,
+    "status_label": "Un peu élevée",
+    "status_z": 1.6,
+    "forecast": [
+      {
+        "date_ddmm": "03/08",
+        "temp": 27.4,
+        "kwh": 22.6,
+        "eur": 4.67
+      },
+      {
+        "date_ddmm": "04/08",
+        "temp": 26.3,
+        "kwh": 20.9,
+        "eur": 4.32
+      },
+      {
+        "date_ddmm": "05/08",
+        "temp": 25.8,
+        "kwh": 20.2,
+        "eur": 4.16
+      },
+      {
+        "date_ddmm": "06/08",
+        "temp": 25.4,
+        "kwh": 19.5,
+        "eur": 4.04
+      },
+      {
+        "date_ddmm": "07/08",
+        "temp": 23.5,
+        "kwh": 17.4,
+        "eur": 3.6
+      }
+    ],
+    "forecast_total_kwh": 100.6,
+    "forecast_total_eur": 20.79,
+    "n_days": 30
   }
 }
