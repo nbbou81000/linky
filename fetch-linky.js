@@ -238,6 +238,162 @@ function updateHistory(lastKnownDay, hphc) {
   return history;
 }
 
+// --- Analyse météo (portée depuis le dashboard HTML pour pouvoir l'afficher sur TRMNL,
+// où il n'y a pas de JS/réseau côté écran : tout doit être précalculé ici) ---
+
+async function geocodeAddress(addr) {
+  if (!addr || !addr.city) return null;
+  try {
+    const q = encodeURIComponent(addr.city);
+    const cp = addr.postal_code ? `&postcode=${addr.postal_code}` : "";
+    const res = await fetch(`https://data.geopf.fr/geocodage/search?q=${q}${cp}&limit=1&type=municipality`);
+    const j = await res.json();
+    const f = j.features && j.features[0];
+    if (!f) return null;
+    return { lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function fetchDailyTempsNode(lat, lon, pastDays, forecastDays) {
+  const res = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_mean&past_days=${Math.min(pastDays + 2, 92)}&forecast_days=${forecastDays}&timezone=Europe%2FParis`
+  );
+  const j = await res.json();
+  const map = {};
+  (j.daily.time || []).forEach((d, i) => {
+    map[d] = j.daily.temperature_2m_mean[i];
+  });
+  return map;
+}
+
+function solve3x3(A, b) {
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let i = 0; i < 3; i++) {
+    let pivot = i;
+    for (let k = i + 1; k < 3; k++) if (Math.abs(M[k][i]) > Math.abs(M[pivot][i])) pivot = k;
+    [M[i], M[pivot]] = [M[pivot], M[i]];
+    if (Math.abs(M[i][i]) < 1e-9) return null;
+    for (let k = i + 1; k < 3; k++) {
+      const f = M[k][i] / M[i][i];
+      for (let j = i; j < 4; j++) M[k][j] -= f * M[i][j];
+    }
+  }
+  const x = [0, 0, 0];
+  for (let i = 2; i >= 0; i--) {
+    let s = M[i][3];
+    for (let j = i + 1; j < 3; j++) s -= M[i][j] * x[j];
+    x[i] = s / M[i][i];
+  }
+  return x;
+}
+
+function degreeDayRegression(points, hddBase, cddBase) {
+  const n = points.length;
+  if (n < 5) return null;
+  let S = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ];
+  let Y = [0, 0, 0];
+  points.forEach((p) => {
+    const hdd = Math.max(0, hddBase - p.temp);
+    const cdd = Math.max(0, p.temp - cddBase);
+    const row = [1, hdd, cdd];
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) S[i][j] += row[i] * row[j];
+      Y[i] += row[i] * p.kwh;
+    }
+  });
+  const lambda = 1e-6 * n;
+  for (let i = 0; i < 3; i++) S[i][i] += lambda;
+  const beta = solve3x3(S, Y);
+  if (!beta) return null;
+  const [base, hddCoeff, cddCoeff] = beta;
+  return { base: Math.max(0, base), hddCoeff: Math.max(0, hddCoeff), cddCoeff: Math.max(0, cddCoeff) };
+}
+
+async function buildWeatherInsight(address, dailySeries, blendedPrice) {
+  const HDD_BASE = 18;
+  const CDD_BASE = 24;
+  try {
+    const geo = await geocodeAddress(address);
+    if (!geo) return null;
+    const firstDate = new Date(dailySeries[0].date);
+    const daysSpan = Math.ceil((Date.now() - firstDate.getTime()) / 86400000) + 1;
+    const temps = await fetchDailyTempsNode(geo.lat, geo.lon, daysSpan, 6);
+
+    const points = dailySeries
+      .map((d) => ({ date: d.date, date_ddmm: d.date_ddmm, kwh: d.kwh, temp: temps[d.date] }))
+      .filter((p) => p.temp != null);
+    if (points.length < 5) return null;
+
+    const model = degreeDayRegression(points, HDD_BASE, CDD_BASE);
+    if (!model) return null;
+
+    let heatKwh = 0,
+      coolKwh = 0,
+      baseKwh = 0;
+    const residuals = points.map((p) => {
+      const hdd = Math.max(0, HDD_BASE - p.temp);
+      const cdd = Math.max(0, p.temp - CDD_BASE);
+      const predicted = model.base + model.hddCoeff * hdd + model.cddCoeff * cdd;
+      heatKwh += model.hddCoeff * hdd;
+      coolKwh += model.cddCoeff * cdd;
+      baseKwh += model.base;
+      return p.kwh - predicted;
+    });
+    const meanRes = residuals.reduce((a, b) => a + b, 0) / residuals.length;
+    const variance = residuals.reduce((a, b) => a + (b - meanRes) * (b - meanRes), 0) / residuals.length;
+    const stdRes = Math.sqrt(variance) || 1;
+    const lastZ = residuals[residuals.length - 1] / stdRes;
+    let statusLabel;
+    if (lastZ >= 2) statusLabel = "Anormalement élevée";
+    else if (lastZ >= 1) statusLabel = "Un peu élevée";
+    else if (lastZ <= -1.5) statusLabel = "Basse";
+    else statusLabel = "Normale";
+
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const forecastDates = Object.keys(temps)
+      .filter((d) => d > todayIso)
+      .sort()
+      .slice(0, 5);
+    const forecast = forecastDates.map((d) => {
+      const temp = temps[d];
+      const hdd = Math.max(0, HDD_BASE - temp);
+      const cdd = Math.max(0, temp - CDD_BASE);
+      const predKwh = Math.max(0, model.base + model.hddCoeff * hdd + model.cddCoeff * cdd);
+      const dd = new Date(d);
+      return {
+        date_ddmm: `${String(dd.getDate()).padStart(2, "0")}/${String(dd.getMonth() + 1).padStart(2, "0")}`,
+        temp: Math.round(temp * 10) / 10,
+        kwh: Math.round(predKwh * 10) / 10,
+        eur: Math.round(predKwh * blendedPrice * 100) / 100,
+      };
+    });
+
+    return {
+      hdd_base: HDD_BASE,
+      cdd_base: CDD_BASE,
+      heat_kwh: Math.round(heatKwh * 10) / 10,
+      cool_kwh: Math.round(coolKwh * 10) / 10,
+      base_kwh: Math.round(baseKwh * 10) / 10,
+      eur_per_degree_heat: Math.round(model.hddCoeff * blendedPrice * 100) / 100,
+      status_label: statusLabel,
+      status_z: Math.round(lastZ * 10) / 10,
+      forecast,
+      forecast_total_kwh: Math.round(forecast.reduce((a, f) => a + f.kwh, 0) * 10) / 10,
+      forecast_total_eur: Math.round(forecast.reduce((a, f) => a + f.eur, 0) * 100) / 100,
+      n_days: points.length,
+    };
+  } catch (e) {
+    console.warn("⚠️  Analyse météo impossible:", e.message);
+    return null;
+  }
+}
+
 async function main() {
   // On relit l'ancien data.json (s'il existe) pour pouvoir réutiliser la courbe de charge / HP/HC /
   // dernière puissance en cas d'échec du fetch (quota MyElectricalData atteint, etc.) plutôt que
@@ -432,7 +588,12 @@ async function main() {
     },
   };
 
-  updateHistory(data.last_known_day, hphc);
+  const addressForWeather =
+    addresses?.customer?.usage_points?.[0]?.usage_point?.usage_point_addresses || addresses || null;
+  console.log("Building weather insight (géocodage + Open-Meteo + régression)...");
+  data.weather_insight = await buildWeatherInsight(addressForWeather, last30, TARIFF.hp_price);
+
+  updateHistory(data.last_known_day, effectiveHphc);
 
   fs.writeFileSync("data.json", JSON.stringify(data, null, 2));
   console.log("✅ data.json généré.");
