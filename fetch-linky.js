@@ -46,12 +46,15 @@ function datetimeFr(iso) {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}h${pad(d.getMinutes())}`;
 }
 
+let rateLimited = false; // passe à true dès qu'un 429 est rencontré, pour arrêter les tentatives inutiles
+
 async function medFetch(path) {
   const url = `${BASE}${path}`;
   const res = await fetch(url, { headers: { Authorization: TOKEN } });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     console.warn(`⚠️  ${path} -> HTTP ${res.status} ${body.slice(0, 200)}`);
+    if (res.status === 429) rateLimited = true;
     return null;
   }
   return res.json();
@@ -190,6 +193,10 @@ async function fetchLoadCurveChunked(pdl, startDate, endDate) {
   let chunkStart = new Date(startDate);
   const end = new Date(endDate);
   while (chunkStart < end) {
+    if (rateLimited) {
+      console.log("⏭️  Quota atteint, arrêt des tranches de courbe de charge restantes pour cette exécution.");
+      break;
+    }
     let chunkEnd = addDays(chunkStart, 7);
     if (chunkEnd > end) chunkEnd = end;
     const startStr = fmtDate(chunkStart);
@@ -201,6 +208,34 @@ async function fetchLoadCurveChunked(pdl, startDate, endDate) {
     chunkStart = chunkEnd;
   }
   return readings;
+}
+
+// --- Historique long terme : contrairement à data.json (fenêtre glissante 30j), on accumule
+// un point par jour dans history.json, qui grossit indéfiniment (jamais tronqué).
+function updateHistory(lastKnownDay, hphc) {
+  const HISTORY_PATH = "history.json";
+  let history = [];
+  try {
+    if (fs.existsSync(HISTORY_PATH)) {
+      history = JSON.parse(fs.readFileSync(HISTORY_PATH, "utf8"));
+    }
+  } catch (e) {
+    console.warn("⚠️  history.json illisible, on repart d'un historique vide:", e.message);
+  }
+  if (lastKnownDay && lastKnownDay.date) {
+    const entry = {
+      date: lastKnownDay.date,
+      kwh: lastKnownDay.kwh,
+      hc_pct: hphc && hphc.hc_pct != null ? hphc.hc_pct : null,
+    };
+    const idx = history.findIndex((h) => h.date === entry.date);
+    if (idx >= 0) history[idx] = entry;
+    else history.push(entry);
+    history.sort((a, b) => (a.date < b.date ? -1 : 1));
+  }
+  fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2));
+  console.log(`✅ history.json mis à jour (${history.length} jours au total).`);
+  return history;
 }
 
 async function main() {
@@ -225,8 +260,13 @@ async function main() {
   console.log("Fetching daily consumption max power (30j)...");
   const dailyMaxPower = await medFetch(`/daily_consumption_max_power/${PDL}/start/${startStr30}/end/${todayStr}`);
 
-  console.log("Fetching load curve (30j, pas 30min, par tranches de 7j)...");
-  const loadCurveReadings = await fetchLoadCurveChunked(PDL, start30, today);
+  // La courbe de charge est volontairement limitée à 7j (une seule tranche) pour ménager
+  // le quota MyElectricalData — largement suffisant pour les 48h affichées + un échantillon HP/HC.
+  const start7ForLoadCurve = new Date(today);
+  start7ForLoadCurve.setDate(start7ForLoadCurve.getDate() - 7);
+
+  console.log("Fetching load curve (7j, pas 30min)...");
+  const loadCurveReadings = await fetchLoadCurveChunked(PDL, start7ForLoadCurve, today);
 
   // --- Consommation quotidienne ---
   const dailyReadings = dailyConso?.meter_reading?.interval_reading || [];
@@ -357,6 +397,8 @@ async function main() {
       hphc_bar: buildHphcBar(hphc, Math.round(total30 * 100) / 100, TARIFF.hc_pct_estimate, { width: 760 }),
     },
   };
+
+  updateHistory(data.last_known_day, hphc);
 
   fs.writeFileSync("data.json", JSON.stringify(data, null, 2));
   console.log("✅ data.json généré.");

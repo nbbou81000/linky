@@ -162,6 +162,7 @@
   <div class="tab" data-tab="billing">HP/HC &amp; Facturation</div>
   <div class="tab" data-tab="details">Détails &amp; contrat</div>
   <div class="tab" data-tab="weather">Météo &amp; Usages</div>
+  <div class="tab" data-tab="extras">Extras</div>
 </div>
 
 <div class="dashboard" id="dashboard">
@@ -233,19 +234,21 @@ function renderAll(){
     'Maj ' + (data.generated_at_fr || (data.generated_at ? new Date(data.generated_at).toLocaleString('fr-FR') : '--')) +
     (data.pdl ? ' · PDL ' + data.pdl.slice(0,4) + '••••••••••' : '');
 
+  destroyCharts();
+  document.getElementById('dashboard').innerHTML = ''; // nettoyage complet (plus de résidu "Chargement…")
+
   renderOverview(data);
   renderBilling(data);
   renderDetails(data);
   renderWeather(data);
+  renderExtras(data);
 }
 
 // ============================================================
 // TAB 1 : VUE D'ENSEMBLE
 // ============================================================
 function renderOverview(data){
-  destroyCharts();
   const dash = document.getElementById('dashboard');
-  Array.from(dash.querySelectorAll('.tabpage')).forEach(e=>e.remove());
 
   const todayKwh = data.last_known_day ? data.last_known_day.kwh : null;
   const yestKwh = data.yesterday ? data.yesterday.kwh : null;
@@ -593,8 +596,8 @@ async function geocodeAddress(addr){
   } catch(e){ return null; }
 }
 
-async function fetchDailyTemps(lat, lon, days){
-  const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_mean&past_days=${Math.min(days+2,92)}&forecast_days=1&timezone=Europe%2FParis`);
+async function fetchDailyTemps(lat, lon, pastDays, forecastDays){
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_mean&past_days=${Math.min(pastDays+2,92)}&forecast_days=${forecastDays}&timezone=Europe%2FParis`);
   const j = await res.json();
   const map = {};
   (j.daily.time||[]).forEach((d,i)=>{ map[d] = j.daily.temperature_2m_mean[i]; });
@@ -624,7 +627,7 @@ async function renderWeather(data){
   const daysSpan = Math.ceil((Date.now() - firstDate.getTime()) / 86400000) + 1;
   let temps;
   try {
-    temps = await fetchDailyTemps(geo.lat, geo.lon, daysSpan);
+    temps = await fetchDailyTemps(geo.lat, geo.lon, daysSpan, 6);
   } catch(e) {
     page.innerHTML = `<div class="row row--main">${panel('Corrélation météo', 'var(--blue)', '<div class="empty-state">Erreur météo : ' + e.message + '</div>')}</div>`;
     return;
@@ -656,7 +659,16 @@ async function renderWeather(data){
 
   const hasLoadCurve = !!(data.hphc && data.hphc.hc_pct != null);
 
+  const todayIso = new Date().toISOString().slice(0,10);
+  const forecastDates = Object.keys(temps).filter(d => d > todayIso).sort().slice(0,5);
+
   page.innerHTML = `
+    <div class="row row--split2">
+      ${panel('Statut de consommation', 'var(--red)', '<div id="conso-status"></div>')}
+      ${panel('Prévision 5 jours (météo à venir)', 'var(--blue)', forecastDates.length
+        ? '<div id="forecast-box"></div>'
+        : '<div class="empty-state">Prévisions météo indisponibles pour le moment.</div>')}
+    </div>
     <div class="row row--main">
       ${panel('Consommation quotidienne vs température moyenne', 'var(--blue)', '<div class="chart-wrap"><canvas id="chart-weather-corr"></canvas></div>')}
     </div>
@@ -675,6 +687,10 @@ async function renderWeather(data){
       ${panel('Détail par appareil (frigo / éclairage / autres)', 'var(--yellow)', hasLoadCurve
         ? '<div id="usage-detail"></div>'
         : "<div class=\"empty-state\">Nécessite la courbe de charge (30 min) — <span class=\"badge warn\">pas encore active côté Enedis</span>. Dès qu'elle le sera, cette section se remplira automatiquement au prochain export.</div>")}
+    </div>
+    <div class="row row--split2">
+      ${panel('Sensibilité température', 'var(--purple)', '<div id="temp-sensitivity"></div>')}
+      ${panel('Journal des jours atypiques (30j)', 'var(--red)', '<div id="anomaly-log"></div>')}
     </div>
   `;
 
@@ -721,7 +737,99 @@ async function renderWeather(data){
     });
     charts.push(corrChart);
 
+    // --- Statut de consommation : écart du dernier jour connu vs prédiction du modèle ---
+    const residuals = points.map(p => {
+      const hdd = Math.max(0, hddBase - p.temp);
+      const cdd = Math.max(0, p.temp - cddBase);
+      const predicted = r.model.base + r.model.hddCoeff * hdd + r.model.cddCoeff * cdd;
+      return p.kwh - predicted;
+    });
+    const meanRes = residuals.reduce((a,b)=>a+b,0) / residuals.length;
+    const variance = residuals.reduce((a,b)=>a+(b-meanRes)*(b-meanRes),0) / residuals.length;
+    const stdRes = Math.sqrt(variance) || 1;
+    const lastResidual = residuals[residuals.length - 1];
+    const z = lastResidual / stdRes;
+    const lastPoint = points[points.length - 1];
+
+    let statusLabel, statusColor, statusIcon;
+    if (z >= 2) { statusLabel = 'Anormalement élevée'; statusColor = 'var(--red)'; statusIcon = '⚠️'; }
+    else if (z >= 1) { statusLabel = 'Un peu élevée'; statusColor = 'var(--orange)'; statusIcon = '↗'; }
+    else if (z <= -1.5) { statusLabel = 'Basse'; statusColor = 'var(--green)'; statusIcon = '↘'; }
+    else { statusLabel = 'Normale'; statusColor = 'var(--green)'; statusIcon = '✓'; }
+
+    document.getElementById('conso-status').innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:26px;">${statusIcon}</span>
+        <span class="bignum" style="color:${statusColor}">${statusLabel}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">
+        Dernier jour connu (${lastPoint.date_fr}) : ${fmt(lastPoint.kwh)} kWh, contre ${fmt(lastPoint.kwh - lastResidual)} kWh attendu à cette température (${fmt(lastPoint.temp)}°C).
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Écart de ${z>=0?'+':''}${fmt(z,1)}σ par rapport au modèle température → consommation des ${points.length} derniers jours. Un écart normal se situe entre -1σ et +1σ.</div>
+    `;
+
+    // --- Prévision 5 jours à partir de la météo à venir ---
+    const forecastBox = document.getElementById('forecast-box');
+    if (forecastBox && forecastDates.length) {
+      const blendedPrice = (data.estimated_bill && data.month && data.month.total_kwh)
+        ? (data.estimated_bill.total_eur - data.estimated_bill.subscription_eur) / data.month.total_kwh
+        : DEFAULT_TARIFF.hp_price;
+      let totalKwh = 0, totalEur = 0;
+      const rows = forecastDates.map(d => {
+        const temp = temps[d];
+        const hdd = Math.max(0, hddBase - temp);
+        const cdd = Math.max(0, temp - cddBase);
+        const predKwh = Math.max(0, r.model.base + r.model.hddCoeff * hdd + r.model.cddCoeff * cdd);
+        const predEur = predKwh * blendedPrice;
+        totalKwh += predKwh; totalEur += predEur;
+        const dd = new Date(d);
+        const label = dd.toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'2-digit' });
+        return `<tr><td>${label}</td><td class="mono">${fmt(temp)}°C</td><td class="mono">${fmt(predKwh)} kWh</td><td class="mono">${euro(predEur)}</td></tr>`;
+      }).join('');
+      forecastBox.innerHTML = `
+        <table>
+          <thead><tr><th>Jour</th><th>Temp. moy.</th><th>Conso prévue</th><th>Coût prévu</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">Total 5j : <b>${fmt(totalKwh)} kWh</b> · <b>${euro(totalEur)}</b></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:6px;">Projection basée sur le modèle température appris sur tes ${points.length} derniers jours, appliqué à la météo prévue (Open-Meteo). Suppose des habitudes de consommation stables.</div>
+      `;
+    }
+
     if (hasLoadCurve) renderApplianceDetail(data, r);
+
+    // --- Sensibilité température : combien coûte un degré de moins/plus ---
+    const blendedPriceSens = (data.estimated_bill && data.month && data.month.total_kwh)
+      ? (data.estimated_bill.total_eur - data.estimated_bill.subscription_eur) / data.month.total_kwh
+      : DEFAULT_TARIFF.hp_price;
+    const heatEurPerDegree = r.model.hddCoeff * blendedPriceSens;
+    const coolEurPerDegree = r.model.cddCoeff * blendedPriceSens;
+    document.getElementById('temp-sensitivity').innerHTML = `
+      <div class="bignum">${euro(heatEurPerDegree)} <small>/ jour / °C en moins (hiver)</small></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);">
+        Chaque degré sous ${hddBase}°C ajoute <b>${fmt(r.model.hddCoeff)} kWh</b> à ta conso du jour, soit environ <b>${euro(heatEurPerDegree)}</b>.
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">
+        Chaque degré au-dessus de ${cddBase}°C ajoute <b>${fmt(r.model.cddCoeff)} kWh</b> (climatisation), soit environ <b>${euro(coolEurPerDegree)}</b>.
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Dérivé directement des coefficients de la régression degrés-jours ci-dessus.</div>
+    `;
+
+    // --- Journal des jours atypiques : tous les points où |z| >= 1 ---
+    const anomalies = points.map((p, i) => ({ p, z: residuals[i] / stdRes }))
+      .filter(a => Math.abs(a.z) >= 1)
+      .sort((a, b) => Math.abs(b.z) - Math.abs(a.z))
+      .slice(0, 8);
+    const anomalyLog = document.getElementById('anomaly-log');
+    if (anomalies.length) {
+      anomalyLog.innerHTML = `<table><thead><tr><th>Date</th><th>Conso</th><th>Écart</th></tr></thead><tbody>
+        ${anomalies.map(a => `<tr><td>${a.p.date_fr}</td><td class="mono">${fmt(a.p.kwh)} kWh</td>
+          <td class="mono" style="color:${a.z>0?'var(--red)':'var(--green)'}">${a.z>0?'+':''}${fmt(a.z,1)}σ</td></tr>`).join('')}
+      </tbody></table>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Jours où la conso s'écarte d'au moins 1σ de ce que prédit le modèle température.</div>`;
+    } else {
+      anomalyLog.innerHTML = '<div class="empty-state">Aucun jour atypique détecté sur la période.</div>';
+    }
   }
 
   document.getElementById('in-hddbase').addEventListener('input', draw);
@@ -748,6 +856,139 @@ function renderApplianceDetail(data, heatModel){
     <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">
       Approximation à partir de l'échantillon de courbe de charge disponible (48h) : la puissance minimale nocturne sert de proxy pour le frigo et les veilles ; le reste (éclairage, TV, multimédia) n'est pas séparable plus finement sans signatures d'appareils dédiées.
     </div>`;
+}
+
+// ============================================================
+// TAB 5 : EXTRAS (CO2, comparaison nationale, facteur de charge, export, historique)
+// ============================================================
+const HOUSEHOLD_REFS = {
+  appart_sans: { label: "Appartement, sans chauffage électrique", kwhAn: 2200 },
+  appart_avec: { label: "Appartement, chauffage électrique", kwhAn: 6400 },
+  maison_sans: { label: "Maison, sans chauffage électrique", kwhAn: 3700 },
+  maison_pac: { label: "Maison, pompe à chaleur", kwhAn: 10000 },
+  maison_elec: { label: "Maison, chauffage électrique direct (grille-pain)", kwhAn: 16000 },
+};
+
+function downloadCsv(monthSeries){
+  const rows = ["date,kwh"].concat(monthSeries.map(d => `${d.date},${d.kwh}`));
+  const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "linky-conso-30j.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function fetchHistory(){
+  const srcUrl = document.getElementById("srcInput").value.trim() || "data.json";
+  const historyUrl = srcUrl.includes("data.json") ? srcUrl.replace("data.json", "history.json") : "history.json";
+  try {
+    const res = await fetch(historyUrl, { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) { return null; }
+}
+
+async function renderExtras(data){
+  const page = document.createElement("div");
+  page.className = "tabpage";
+  page.id = "page-extras";
+
+  const monthSeries = (data.month && data.month.series) || [];
+  const monthTotal = data.month ? data.month.total_kwh : 0;
+
+  // Facteur de charge : puissance moyenne implicite vs pic mesuré
+  const avgPowerW = data.month ? (data.month.avg_kwh_per_day * 1000) / 24 : null;
+  const peakW = data.peak_power ? data.peak_power.watts : null;
+  const loadFactorPct = (avgPowerW && peakW) ? Math.round((avgPowerW / peakW) * 1000) / 10 : null;
+
+  page.innerHTML = `
+    <div class="row row--split3">
+      ${panel("Empreinte CO2 estimée", "var(--green)", `
+        <div class="tariff-form">
+          <div class="tariff-row"><label>Intensité carbone (gCO2/kWh)</label><input class="num-input" id="in-co2factor" type="number" step="1" value="56"></div>
+        </div>
+        <div id="co2-result" style="margin-top:10px;"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Défaut = moyenne annuelle indicative du mix électrique français (RTE/ADEME, très bas carbone grâce au nucléaire). Varie fortement selon l'heure (pointe vs creux).</div>
+      `)}
+      ${panel("Comparaison à la moyenne nationale", "var(--blue)", `
+        <select class="src-input" id="in-household" style="width:100%;">
+          ${Object.entries(HOUSEHOLD_REFS).map(([k,v]) => `<option value="${k}" ${k==='maison_pac'?'selected':''}>${v.label}</option>`).join("")}
+        </select>
+        <div id="household-result" style="margin-top:10px;"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Références ADEME/RTE, ordres de grandeur indicatifs (varie selon surface, isolation, occupants).</div>
+      `)}
+      ${panel("Facteur de charge (30j)", "var(--orange)", loadFactorPct != null ? `
+        <div class="bignum">${loadFactorPct}%</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">
+          Puissance moyenne (${Math.round(avgPowerW)} W) / pic mesuré (${peakW} W).<br>
+          Plus c'est bas, plus ta conso est "en pointes" ; plus c'est haut, plus elle est lissée dans le temps.
+        </div>
+      ` : '<div class="empty-state">Données insuffisantes</div>')}
+    </div>
+    <div class="row row--split2">
+      ${panel("Export des données", "var(--yellow)", `
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Télécharge les 30 derniers jours (date, kWh) au format CSV.</div>
+        <button class="btn-refresh" id="btn-csv">⬇ Télécharger le CSV</button>
+      `)}
+      ${panel("Historique accumulé", "var(--purple)", '<div id="history-box"><div class="empty-state">Chargement de l\u2019historique…</div></div>')}
+    </div>
+  `;
+  document.getElementById("dashboard").appendChild(page);
+
+  // CO2
+  function drawCo2(){
+    const factor = parseFloat(document.getElementById("in-co2factor").value) || 56;
+    const kgCo2 = (monthTotal * factor) / 1000;
+    const kmEquivalent = Math.round((kgCo2 * 1000) / 120); // ~120 gCO2/km voiture moyenne française
+    document.getElementById("co2-result").innerHTML = `
+      <div class="bignum">${fmt(kgCo2)} <small>kg CO2 / 30j</small></div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">≈ ${kmEquivalent} km parcourus en voiture thermique moyenne</div>
+    `;
+  }
+  document.getElementById("in-co2factor").addEventListener("input", drawCo2);
+  drawCo2();
+
+  // Comparaison nationale
+  function drawHousehold(){
+    const key = document.getElementById("in-household").value;
+    const ref = HOUSEHOLD_REFS[key];
+    const annualProjection = data.month ? data.month.avg_kwh_per_day * 365 : null;
+    if (!annualProjection) { document.getElementById("household-result").innerHTML = ""; return; }
+    const diffPct = Math.round(((annualProjection - ref.kwhAn) / ref.kwhAn) * 100);
+    document.getElementById("household-result").innerHTML = `
+      <div class="bignum">${diffPct > 0 ? "+" : ""}${diffPct}%</div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;">
+        Ta projection annuelle (${Math.round(annualProjection)} kWh) vs référence "${ref.label}" (${ref.kwhAn} kWh/an)
+      </div>
+    `;
+  }
+  document.getElementById("in-household").addEventListener("change", drawHousehold);
+  drawHousehold();
+
+  // Export CSV
+  document.getElementById("btn-csv").addEventListener("click", () => downloadCsv(monthSeries));
+
+  // Historique accumulé
+  const history = await fetchHistory();
+  const historyBox = document.getElementById("history-box");
+  if (!history || !history.length) {
+    historyBox.innerHTML = '<div class="empty-state">Pas encore d\u2019historique accumulé — il se construit un jour à la fois à chaque exécution du script. Reviens dans quelques semaines.</div>';
+  } else {
+    historyBox.innerHTML = `<div class="chart-wrap small"><canvas id="chart-history"></canvas></div><div style="font-size:10px;color:var(--text-dim);margin-top:6px;">${history.length} jour(s) accumulé(s) depuis le début du suivi.</div>`;
+    const ctx = document.getElementById("chart-history").getContext("2d");
+    charts.push(new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: history.map(h => h.date),
+        datasets: [{ data: history.map(h => h.kwh), borderColor: "#b877d9", backgroundColor: "rgba(184,119,217,0.15)", fill: true, tension: 0.2, pointRadius: 0, borderWidth: 1.5 }]
+      },
+      options: baseLineOptions("kWh")
+    }));
+  }
 }
 
 // ---------- Helpers graphiques ----------
