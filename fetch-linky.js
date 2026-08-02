@@ -462,9 +462,21 @@ function buildLoadCurveDetail(loadCurve48h, { width = 760, height = 300, padding
     }
   }
 
+  // Repères horaires (toutes les 6h : 00h/06h/12h/18h) pour un axe de temps lisible
+  const hourTicks = [];
+  coords.forEach((c) => {
+    const d = new Date(c.ts);
+    const h = d.getHours();
+    const m = d.getMinutes();
+    if (h % 6 === 0 && m === 0) {
+      hourTicks.push({ x: c.x, label: `${String(h).padStart(2, "0")}h` });
+    }
+  });
+
   return {
     width,
     height,
+    total_height: height + 22, // + espace réservé pour l'axe horaire en bas
     line_path: linePath,
     area_path: areaPath,
     min_value: minV,
@@ -475,6 +487,7 @@ function buildLoadCurveDetail(loadCurve48h, { width = 760, height = 300, padding
     current_point: currentPoint,
     night_bands: nightBands,
     day_boundary_x: dayBoundaryX,
+    hour_ticks: hourTicks,
   };
 }
 
