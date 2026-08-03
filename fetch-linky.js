@@ -594,8 +594,10 @@ async function main() {
   // charge avec un décalage (souvent J-1 ou J-2) : c'est le dernier point CONNU, pas l'instant présent.
   const lastKnownPower = loadCurveSeries.length ? loadCurveSeries[loadCurveSeries.length - 1] : null;
 
-  // On garde 2 jours pour l'export (poids du JSON), le HP/HC est calculé sur les 30j.
+  // On garde 2 jours pour l'export TRMNL (poids limité, écran e-ink), mais la série complète
+  // (jusqu'à 30j) est aussi exportée séparément pour la page statique qui peut se permettre plus de poids.
   const loadCurve48h = loadCurveSeries.slice(-96);
+  const loadCurveFull = loadCurveSeries;
 
   // --- Classification HP/HC ---
   const offpeakStr =
@@ -627,12 +629,14 @@ async function main() {
   // --- Repli sur le cache si la courbe de charge n'a pas pu être récupérée (quota atteint, etc.) ---
   // On garde les dernières bonnes données plutôt que d'écraser avec du vide.
   let effectiveLoadCurve48h = loadCurve48h;
+  let effectiveLoadCurveFull = loadCurveFull;
   let effectiveHphc = hphc;
   let effectiveLastKnownPower = lastKnownPowerObj;
   let loadCurveCache = null;
   if (!loadCurveReadings.length && previousData && previousData.load_curve_48h && previousData.load_curve_48h.length) {
     console.log(`ℹ️  Courbe de charge vide sur cet appel${rateLimited ? " (quota atteint)" : ""} : réutilisation des dernières données connues du ${previousData.generated_at_fr || previousData.generated_at}.`);
     effectiveLoadCurve48h = previousData.load_curve_48h;
+    effectiveLoadCurveFull = previousData.load_curve_full || previousData.load_curve_48h;
     effectiveHphc = previousData.hphc || null;
     effectiveLastKnownPower = previousData.last_known_power || null;
     loadCurveCache = {
@@ -687,6 +691,7 @@ async function main() {
     estimated_bill: estimateBill(Math.round(total30 * 100) / 100, effectiveHphc),
 
     load_curve_48h: effectiveLoadCurve48h,
+    load_curve_full: effectiveLoadCurveFull, // jusqu'à 30j, pour la page statique uniquement
 
     // Géométrie SVG prête à l'emploi pour le mode "graphiques" du plugin (aucun calcul côté Liquid)
     charts: {

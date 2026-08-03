@@ -256,7 +256,9 @@ function renderOverview(data){
   const deltaPct = (delta!=null && yestKwh) ? (delta/yestKwh*100) : null;
   const weekSeries = (data.week && data.week.series) || [];
   const monthSeries = (data.month && data.month.series) || [];
-  const loadCurve = data.load_curve_48h || [];
+  const loadCurve = data.load_curve_full || data.load_curve_48h || [];
+  const loadCurveSpanDays = loadCurve.length ? Math.round(loadCurve.length / 48) : 0;
+  const loadCurveTitle = loadCurveSpanDays > 2 ? `Courbe de charge · ${loadCurveSpanDays} derniers jours (W)` : 'Courbe de charge · 48 dernières heures (W)';
 
   const page = document.createElement('div');
   page.className = 'tabpage active';
@@ -274,7 +276,7 @@ function renderOverview(data){
         data.month ? `<div class="stat-delta" style="color:var(--text-dim)">Total : ${fmt(data.month.total_kwh)} kWh</div>` : '', 'spark-avg')}
     </div>
     <div class="row row--main">
-      ${panel('Courbe de charge · 48 dernières heures (W)' + (data.load_curve_cache && data.load_curve_cache.stale ? ` <span class="badge warn">cache du ${data.load_curve_cache.cached_at_fr}</span>` : ''), 'var(--blue)', '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
+      ${panel(loadCurveTitle + (data.load_curve_cache && data.load_curve_cache.stale ? ` <span class="badge warn">cache du ${data.load_curve_cache.cached_at_fr}</span>` : ''), 'var(--blue)', '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
     </div>
     <div class="row row--split">
       ${panel('Consommation quotidienne · 30 jours (kWh)', 'var(--green)', '<div class="chart-wrap"><canvas id="chart-daily"></canvas></div>')}
