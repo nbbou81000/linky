@@ -202,7 +202,7 @@ async function fetchLoadCurveChunked(pdl, startDate, endDate) {
     const startStr = fmtDate(chunkStart);
     const endStr = fmtDate(chunkEnd);
     console.log(`Fetching load curve chunk ${startStr} -> ${endStr}...`);
-    const res = await medFetch(`/consumption_load_curve/${pdl}/start/${startStr}/end/${endStr}`);
+    const res = await medFetch(`/consumption_load_curve/${pdl}/start/${startStr}/end/${endStr}/cache/`);
     const chunkReadings = res?.meter_reading?.interval_reading || [];
     readings.push(...chunkReadings);
     chunkStart = chunkEnd;
@@ -241,23 +241,39 @@ function updateHistory(lastKnownDay, hphc) {
 // --- Analyse météo (portée depuis le dashboard HTML pour pouvoir l'afficher sur TRMNL,
 // où il n'y a pas de JS/réseau côté écran : tout doit être précalculé ici) ---
 
+// Petit retry générique : les blips réseau transitoires (DNS, timeout) sont fréquents
+// sur les runners GitHub Actions, mieux vaut réessayer 2-3 fois avant d'abandonner.
+async function fetchWithRetry(url, attempts = 3, delayMs = 1500) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fetch(url);
+    } catch (e) {
+      lastErr = e;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
 async function geocodeAddress(addr) {
   if (!addr || !addr.city) return null;
   try {
     const q = encodeURIComponent(addr.city);
     const cp = addr.postal_code ? `&postcode=${addr.postal_code}` : "";
-    const res = await fetch(`https://data.geopf.fr/geocodage/search?q=${q}${cp}&limit=1&type=municipality`);
+    const res = await fetchWithRetry(`https://data.geopf.fr/geocodage/search?q=${q}${cp}&limit=1&type=municipality`);
     const j = await res.json();
     const f = j.features && j.features[0];
     if (!f) return null;
     return { lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] };
   } catch (e) {
+    console.warn("⚠️  Géocodage impossible après plusieurs tentatives:", e.message);
     return null;
   }
 }
 
 async function fetchDailyTempsNode(lat, lon, pastDays, forecastDays) {
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_mean&past_days=${Math.min(pastDays + 2, 92)}&forecast_days=${forecastDays}&timezone=Europe%2FParis`
   );
   const j = await res.json();
@@ -511,27 +527,25 @@ async function main() {
   const startStr30 = fmtDate(start30);
 
   console.log("Fetching contract...");
-  const contract = await medFetch(`/contracts/${PDL}/`);
+  const contract = await medFetch(`/contracts/${PDL}/cache/`);
 
   // Note : l'endpoint identity (nom/prénom du titulaire) n'est plus appelé — cette info
   // n'est jamais exposée dans data.json (page publique), pas la peine de la récupérer.
 
   console.log("Fetching addresses...");
-  const addresses = await medFetch(`/addresses/${PDL}/`);
+  const addresses = await medFetch(`/addresses/${PDL}/cache/`);
 
   console.log("Fetching daily consumption (30j)...");
-  const dailyConso = await medFetch(`/daily_consumption/${PDL}/start/${startStr30}/end/${todayStr}`);
+  const dailyConso = await medFetch(`/daily_consumption/${PDL}/start/${startStr30}/end/${todayStr}/cache/`);
 
   console.log("Fetching daily consumption max power (30j)...");
-  const dailyMaxPower = await medFetch(`/daily_consumption_max_power/${PDL}/start/${startStr30}/end/${todayStr}`);
+  const dailyMaxPower = await medFetch(`/daily_consumption_max_power/${PDL}/start/${startStr30}/end/${todayStr}/cache/`);
 
-  // La courbe de charge est volontairement limitée à 7j (une seule tranche) pour ménager
-  // le quota MyElectricalData — largement suffisant pour les 48h affichées + un échantillon HP/HC.
-  const start7ForLoadCurve = new Date(today);
-  start7ForLoadCurve.setDate(start7ForLoadCurve.getDate() - 7);
-
-  console.log("Fetching load curve (7j, pas 30min)...");
-  const loadCurveReadings = await fetchLoadCurveChunked(PDL, start7ForLoadCurve, today);
+  // Avec le cache MyElectricalData actif (quota plus généreux), on récupère 30j de courbe
+  // de charge (5 tranches de 7j max/appel, limite côté Enedis) plutôt que 7j seulement
+  // — HP/HC et historique bien plus précis.
+  console.log("Fetching load curve (30j, pas 30min, par tranches de 7j)...");
+  const loadCurveReadings = await fetchLoadCurveChunked(PDL, start30, today);
 
   // --- Consommation quotidienne ---
   const dailyReadings = dailyConso?.meter_reading?.interval_reading || [];
@@ -696,6 +710,10 @@ async function main() {
 
   console.log("Building weather insight (géocodage + Open-Meteo + régression)...");
   data.weather_insight = await buildWeatherInsight(fullAddress, last30, TARIFF.hp_price);
+  if (!data.weather_insight && previousData && previousData.weather_insight) {
+    console.log("ℹ️  Analyse météo indisponible cette fois : réutilisation de celle du run précédent.");
+    data.weather_insight = previousData.weather_insight;
+  }
 
   updateHistory(data.last_known_day, effectiveHphc);
 
