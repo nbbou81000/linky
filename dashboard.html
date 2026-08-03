@@ -276,7 +276,14 @@ function renderOverview(data){
         data.month ? `<div class="stat-delta" style="color:var(--text-dim)">Total : ${fmt(data.month.total_kwh)} kWh</div>` : '', 'spark-avg')}
     </div>
     <div class="row row--main">
-      ${panel(loadCurveTitle + (data.load_curve_cache && data.load_curve_cache.stale ? ` <span class="badge warn">cache du ${data.load_curve_cache.cached_at_fr}</span>` : ''), 'var(--blue)', '<div class="chart-wrap"><canvas id="chart-loadcurve"></canvas></div>')}
+      ${panel(loadCurveTitle + (data.load_curve_cache && data.load_curve_cache.stale ? ` <span class="badge warn">cache du ${data.load_curve_cache.cached_at_fr}</span>` : ''), 'var(--blue)', `
+        <div class="chart-wrap" id="loadcurve-clickzone" style="cursor:zoom-in;" title="Cliquer pour agrandir"><canvas id="chart-loadcurve"></canvas></div>
+        <div class="hphc-legend" style="margin-top:6px;"><span><i style="background:#ff9830"></i>Heures Pleines</span><span><i style="background:#5794f2"></i>Heures Creuses</span><span style="margin-left:auto;color:var(--text-dim);font-size:11px;">🔍 cliquer pour agrandir</span></div>
+      `)}
+    </div>
+    <div class="row row--split">
+      ${panel('Profil horaire moyen (W par heure)', 'var(--purple)', '<div class="chart-wrap small"><canvas id="chart-hourly-profile"></canvas></div>')}
+      ${panel('Analyse de la courbe de charge', 'var(--yellow)', '<div id="loadcurve-stats"></div>')}
     </div>
     <div class="row row--split">
       ${panel('Consommation quotidienne · 30 jours (kWh)', 'var(--green)', '<div class="chart-wrap"><canvas id="chart-daily"></canvas></div>')}
@@ -292,19 +299,33 @@ function renderOverview(data){
   makeSparkline('spark-today', weekSeries.map(d=>d.kwh), '#5794f2');
   makeSparkline('spark-avg', monthSeries.map(d=>d.kwh), '#b877d9');
 
+  const offpeakRanges = data.offpeak_ranges || [];
+
   if (loadCurve.length) {
     charts.push(new Chart(document.getElementById('chart-loadcurve').getContext('2d'), {
       type:'line',
       data:{
         labels: loadCurve.map(d => new Date(d.ts).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})),
-        datasets:[{ data: loadCurve.map(d=>d.watts), borderColor:'#5794f2', backgroundColor:'rgba(87,148,242,0.15)',
-          fill:true, tension:0.25, pointRadius:0, borderWidth:1.5 }]
+        datasets:[{
+          data: loadCurve.map(d=>d.watts),
+          borderColor:'#ff9830', backgroundColor:'rgba(255,152,48,0.15)',
+          fill:true, tension:0.25, pointRadius:0, borderWidth:1.5,
+          segment: {
+            borderColor: ctx => isOffpeakTs(loadCurve[ctx.p0DataIndex].ts, offpeakRanges) ? '#5794f2' : '#ff9830',
+            backgroundColor: ctx => isOffpeakTs(loadCurve[ctx.p0DataIndex].ts, offpeakRanges) ? 'rgba(87,148,242,0.15)' : 'rgba(255,152,48,0.15)'
+          }
+        }]
       },
       options: baseLineOptions('W')
     }));
+    document.getElementById('loadcurve-clickzone').addEventListener('click', () => openLoadCurveZoom(loadCurve, offpeakRanges, loadCurveTitle));
+    renderHourlyProfile(loadCurve);
+    renderLoadCurveStats(loadCurve, offpeakRanges);
   } else {
     document.getElementById('chart-loadcurve').closest('.chart-wrap').innerHTML =
       '<div class="empty-state">Pas de courbe de charge disponible.<br><span class="badge warn">Active la "collecte enrichie" sur myelectricaldata.fr</span></div>';
+    document.getElementById('chart-hourly-profile').closest('.chart-wrap').innerHTML = '<div class="empty-state">--</div>';
+    document.getElementById('loadcurve-stats').innerHTML = '<div class="empty-state">--</div>';
   }
 
   if (monthSeries.length) {
@@ -1018,6 +1039,115 @@ async function renderExtras(data){
       options: baseLineOptions("kWh")
     }));
   }
+}
+
+// ---------- HP/HC, profil horaire, stats et zoom (courbe de charge) ----------
+function isOffpeakTs(ts, ranges){
+  if (!ranges || !ranges.length) return false;
+  const d = new Date(ts);
+  const minutes = d.getHours()*60 + d.getMinutes();
+  return ranges.some(r => {
+    if (r.startMin <= r.endMin) return minutes >= r.startMin && minutes < r.endMin;
+    return minutes >= r.startMin || minutes < r.endMin;
+  });
+}
+
+function renderHourlyProfile(loadCurve){
+  const sums = new Array(24).fill(0);
+  const counts = new Array(24).fill(0);
+  loadCurve.forEach(p => {
+    const h = new Date(p.ts).getHours();
+    sums[h] += p.watts; counts[h]++;
+  });
+  const avgs = sums.map((s,i) => counts[i] ? Math.round(s/counts[i]) : 0);
+  const el = document.getElementById('chart-hourly-profile');
+  if (!el) return;
+  charts.push(new Chart(el.getContext('2d'), {
+    type:'bar',
+    data:{ labels: avgs.map((_,h)=>String(h).padStart(2,'0')+'h'),
+      datasets:[{ data: avgs, backgroundColor:'#b877d9', borderRadius:2 }] },
+    options: baseBarOptions('W')
+  }));
+}
+
+function renderLoadCurveStats(loadCurve, offpeakRanges){
+  const el = document.getElementById('loadcurve-stats');
+  if (!el) return;
+  const values = loadCurve.map(p=>p.watts);
+  const n = values.length;
+  const mean = values.reduce((a,b)=>a+b,0)/n;
+  const variance = values.reduce((a,b)=>a+(b-mean)*(b-mean),0)/n;
+  const stdDev = Math.sqrt(variance);
+  const hcCount = loadCurve.filter(p => isOffpeakTs(p.ts, offpeakRanges)).length;
+  const hcTimePct = offpeakRanges.length ? Math.round((hcCount/n)*1000)/10 : null;
+
+  // Heure de la journée où le pic quotidien survient le plus souvent
+  const peakHourCounts = new Array(24).fill(0);
+  const byDay = {};
+  loadCurve.forEach(p => {
+    const d = new Date(p.ts);
+    const dayKey = d.toISOString().slice(0,10);
+    if (!byDay[dayKey] || p.watts > byDay[dayKey].watts) byDay[dayKey] = { watts: p.watts, hour: d.getHours() };
+  });
+  Object.values(byDay).forEach(d => peakHourCounts[d.hour]++);
+  const modeHour = peakHourCounts.indexOf(Math.max(...peakHourCounts));
+  const modeHourPct = Math.round((peakHourCounts[modeHour] / Object.keys(byDay).length) * 100);
+
+  el.innerHTML = `
+    <table><tbody>
+      <tr><td>Puissance moyenne</td><td class="mono">${Math.round(mean)} W</td></tr>
+      <tr><td>Variabilité (écart-type)</td><td class="mono">${Math.round(stdDev)} W</td></tr>
+      ${hcTimePct != null ? `<tr><td>Temps passé en HC</td><td class="mono">${hcTimePct}%</td></tr>` : ''}
+      <tr><td>Heure de pic la plus fréquente</td><td class="mono">${String(modeHour).padStart(2,'0')}h (${modeHourPct}% des jours)</td></tr>
+      <tr><td>Jours analysés</td><td class="mono">${Object.keys(byDay).length}</td></tr>
+    </tbody></table>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">Écart-type élevé = conso "en pointes" (appareils qui démarrent/s'arrêtent) ; faible = conso stable dans le temps.</div>
+  `;
+}
+
+function openLoadCurveZoom(loadCurve, offpeakRanges, title){
+  const w = window.open('', '_blank', 'width=1200,height=700');
+  if (!w) { alert('Le navigateur a bloqué la fenêtre. Autorise les popups pour ce site.'); return; }
+  const labels = JSON.stringify(loadCurve.map(d => new Date(d.ts).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})));
+  const values = JSON.stringify(loadCurve.map(d=>d.watts));
+  const ranges = JSON.stringify(offpeakRanges);
+  const timestamps = JSON.stringify(loadCurve.map(d=>d.ts));
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title.replace(/</g,'')}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></` + `script>
+    <style>body{background:#111217;margin:0;padding:20px;font-family:-apple-system,sans-serif;}
+      h2{color:#d8d9da;font-size:15px;font-weight:500;margin:0 0 16px;}
+      #wrap{height:calc(100vh - 80px);}
+      .legend{color:#8e8e8e;font-size:12px;margin-top:10px;display:flex;gap:16px;}
+      .legend span{display:flex;align-items:center;gap:5px;} .legend i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+    </style></head><body>
+    <h2>${title.replace(/</g,'')}</h2>
+    <div id="wrap"><canvas id="c"></canvas></div>
+    <div class="legend"><span><i style="background:#ff9830"></i>Heures Pleines</span><span><i style="background:#5794f2"></i>Heures Creuses</span></div>
+    <script>
+      const labels = ${labels}, values = ${values}, ranges = ${ranges}, timestamps = ${timestamps};
+      function isOffpeak(ts){
+        if (!ranges.length) return false;
+        const d = new Date(ts); const m = d.getHours()*60+d.getMinutes();
+        return ranges.some(r => r.startMin<=r.endMin ? (m>=r.startMin&&m<r.endMin) : (m>=r.startMin||m<r.endMin));
+      }
+      new Chart(document.getElementById('c').getContext('2d'), {
+        type:'line',
+        data:{ labels, datasets:[{ data: values, borderWidth:2,
+          fill:true, tension:0.2, pointRadius:0,
+          segment:{
+            borderColor: ctx => isOffpeak(timestamps[ctx.p0DataIndex]) ? '#5794f2' : '#ff9830',
+            backgroundColor: ctx => isOffpeak(timestamps[ctx.p0DataIndex]) ? 'rgba(87,148,242,0.15)' : 'rgba(255,152,48,0.15)'
+          }
+        }]},
+        options: { responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.y + ' W' } } },
+          scales:{ x:{ ticks:{color:'#6a6f76', maxTicksLimit:24}, grid:{color:'rgba(255,255,255,0.06)'} },
+                   y:{ ticks:{color:'#6a6f76'}, grid:{color:'rgba(255,255,255,0.06)'} } }
+        }
+      });
+    </` + `script>
+    </body></html>`);
+  w.document.close();
 }
 
 // ---------- Helpers graphiques ----------
