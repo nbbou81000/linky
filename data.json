@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-04T10:36:35.331Z",
-  "generated_at_fr": "04/08 10h36",
+  "generated_at": "2026-08-04T10:46:14.527Z",
+  "generated_at_fr": "04/08 10h46",
   "pdl": "2325••••••••••",
   "contract": null,
   "address": null,
@@ -15,6 +15,7 @@
     "ts_fr": "03/08 00h00"
   },
   "peak_power": null,
+  "daily_data_cache": null,
   "week": {
     "total_kwh": 0,
     "avg_kwh_per_day": 0,
@@ -36,8 +37,8 @@
   "load_curve_cache": {
     "stale": true,
     "reason": "no_data",
-    "cached_at": "2026-08-03T11:49:20.937Z",
-    "cached_at_fr": "03/08 11h49"
+    "cached_at": "2026-08-04T10:36:35.331Z",
+    "cached_at_fr": "04/08 10h36"
   },
   "estimated_bill": null,
   "load_curve_48h": [
