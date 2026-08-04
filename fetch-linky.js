@@ -48,16 +48,38 @@ function datetimeFr(iso) {
 
 let rateLimited = false; // passe à true dès qu'un 429 est rencontré, pour arrêter les tentatives inutiles
 
-async function medFetch(path) {
+async function medFetch(path, attempts = 3, delayMs = 2000) {
   const url = `${BASE}${path}`;
-  const res = await fetch(url, { headers: { Authorization: TOKEN } });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.warn(`⚠️  ${path} -> HTTP ${res.status} ${body.slice(0, 200)}`);
-    if (res.status === 429) rateLimited = true;
-    return null;
+  for (let i = 0; i < attempts; i++) {
+    let res;
+    try {
+      res = await fetch(url, { headers: { Authorization: TOKEN } });
+    } catch (e) {
+      // Erreur réseau (timeout, DNS, etc.) — pas une réponse HTTP, donc pas de code à lire.
+      console.warn(`⚠️  ${path} -> erreur réseau (${e.message})${i < attempts - 1 ? ", nouvelle tentative..." : ""}`);
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, delayMs));
+        continue;
+      }
+      return null;
+    }
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      const isTransient = res.status >= 500 && res.status < 600; // 502/503/504 = souvent temporaire, vaut le coup de réessayer
+      console.warn(`⚠️  ${path} -> HTTP ${res.status} ${body.slice(0, 200)}${isTransient && i < attempts - 1 ? ", nouvelle tentative..." : ""}`);
+      if (res.status === 429) {
+        rateLimited = true;
+        return null; // inutile de réessayer un quota, ça ne se débloquera pas en quelques secondes
+      }
+      if (isTransient && i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, delayMs));
+        continue;
+      }
+      return null;
+    }
+    return res.json();
   }
-  return res.json();
+  return null;
 }
 
 function average(nums) {
@@ -651,6 +673,31 @@ async function main() {
   const fullAddress = addresses?.customer?.usage_points?.[0]?.usage_point?.usage_point_addresses || addresses || null;
   const fullContract = contract?.customer?.usage_points?.[0]?.contracts || contract || null;
 
+  // --- Repli sur le cache si la conso quotidienne n'a pas pu être récupérée du tout (panne réseau,
+  // MyElectricalData injoignable, etc.) — mêmes principes que pour la courbe de charge : on garde
+  // les dernières bonnes données plutôt que d'écraser data.json avec du vide.
+  let effectiveLastKnownDay = lastAvailable
+    ? { date: lastAvailable.date, date_fr: lastAvailable.date_fr, weekday_fr: lastAvailable.weekday_fr, kwh: lastAvailable.kwh, lag_days: dataLagDays }
+    : null;
+  let effectiveYesterday = { kwh: yesterdayKwh };
+  let effectiveWeek = { total_kwh: Math.round(total7 * 100) / 100, avg_kwh_per_day: Math.round(avg7 * 100) / 100, series: last7 };
+  let effectiveMonth = { total_kwh: Math.round(total30 * 100) / 100, avg_kwh_per_day: Math.round(avg30 * 100) / 100, max_day: maxDay, min_day: minDay, series: last30 };
+  let effectivePeakPower = peakPower ? { date: peakPower.date, date_fr: peakPower.date_fr, watts: peakPower.watts } : null;
+  let dailyDataCache = null;
+  if (!dailyReadings.length && previousData && previousData.month && previousData.month.series && previousData.month.series.length) {
+    console.log(`ℹ️  Conso quotidienne indisponible sur cet appel : réutilisation des dernières données connues du ${previousData.generated_at_fr || previousData.generated_at}.`);
+    effectiveLastKnownDay = previousData.last_known_day || null;
+    effectiveYesterday = previousData.yesterday || { kwh: null };
+    effectiveWeek = previousData.week || effectiveWeek;
+    effectiveMonth = previousData.month || effectiveMonth;
+    effectivePeakPower = previousData.peak_power || null;
+    dailyDataCache = {
+      stale: true,
+      cached_at: previousData.generated_at,
+      cached_at_fr: previousData.generated_at_fr || null,
+    };
+  }
+
   const data = {
     generated_at: new Date().toISOString(),
     generated_at_fr: datetimeFr(new Date().toISOString()),
@@ -664,31 +711,20 @@ async function main() {
     offpeak_ranges: offpeakRanges,
 
     // "Dernier jour connu" avec sa vraie date Enedis (PAS forcément aujourd'hui : J+1 en théorie, parfois plus)
-    last_known_day: lastAvailable
-      ? { date: lastAvailable.date, date_fr: lastAvailable.date_fr, weekday_fr: lastAvailable.weekday_fr, kwh: lastAvailable.kwh, lag_days: dataLagDays }
-      : null,
-    yesterday: { kwh: yesterdayKwh },
+    last_known_day: effectiveLastKnownDay,
+    yesterday: effectiveYesterday,
     // Dernière puissance CONNUE (pas temps réel, voir commentaire plus haut)
     last_known_power: effectiveLastKnownPower,
-    peak_power: peakPower ? { date: peakPower.date, date_fr: peakPower.date_fr, watts: peakPower.watts } : null,
+    peak_power: effectivePeakPower,
+    daily_data_cache: dailyDataCache, // non-null si conso/semaine/mois viennent du cache (échec réseau)
 
-    week: {
-      total_kwh: Math.round(total7 * 100) / 100,
-      avg_kwh_per_day: Math.round(avg7 * 100) / 100,
-      series: last7,
-    },
-    month: {
-      total_kwh: Math.round(total30 * 100) / 100,
-      avg_kwh_per_day: Math.round(avg30 * 100) / 100,
-      max_day: maxDay,
-      min_day: minDay,
-      series: last30,
-    },
+    week: effectiveWeek,
+    month: effectiveMonth,
 
     hphc: effectiveHphc,
     load_curve_cache: loadCurveCache, // non-null si on affiche des données de courbe de charge périmées (cache)
 
-    estimated_bill: estimateBill(Math.round(total30 * 100) / 100, effectiveHphc),
+    estimated_bill: estimateBill(effectiveMonth.total_kwh, effectiveHphc),
 
     load_curve_48h: effectiveLoadCurve48h,
     load_curve_full: effectiveLoadCurveFull, // jusqu'à 30j, pour la page statique uniquement
@@ -696,7 +732,7 @@ async function main() {
     // Géométrie SVG prête à l'emploi pour le mode "graphiques" du plugin (aucun calcul côté Liquid)
     charts: {
       daily_14: (() => {
-        const items = last30.slice(-14).map((d) => ({ value: d.kwh, label: d.date_ddmm }));
+        const items = effectiveMonth.series.slice(-14).map((d) => ({ value: d.kwh, label: d.date_ddmm }));
         if (items.length) {
           const maxIdx = items.reduce((best, it, i) => (it.value > items[best].value ? i : best), 0);
           items[maxIdx].highlight = true;
@@ -714,7 +750,7 @@ async function main() {
   };
 
   console.log("Building weather insight (géocodage + Open-Meteo + régression)...");
-  data.weather_insight = await buildWeatherInsight(fullAddress, last30, TARIFF.hp_price);
+  data.weather_insight = await buildWeatherInsight(fullAddress, effectiveMonth.series, TARIFF.hp_price);
   if (!data.weather_insight && previousData && previousData.weather_insight) {
     console.log("ℹ️  Analyse météo indisponible cette fois : réutilisation de celle du run précédent.");
     data.weather_insight = previousData.weather_insight;
