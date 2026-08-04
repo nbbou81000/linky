@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-04T10:46:14.527Z",
-  "generated_at_fr": "04/08 10h46",
+  "generated_at": "2026-08-04T11:38:17.657Z",
+  "generated_at_fr": "04/08 11h38",
   "pdl": "2325••••••••••",
   "contract": null,
   "address": null,
@@ -37,8 +37,8 @@
   "load_curve_cache": {
     "stale": true,
     "reason": "no_data",
-    "cached_at": "2026-08-04T10:36:35.331Z",
-    "cached_at_fr": "04/08 10h36"
+    "cached_at": "2026-08-04T10:46:14.527Z",
+    "cached_at_fr": "04/08 10h46"
   },
   "estimated_bill": null,
   "load_curve_48h": [
