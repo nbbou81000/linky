@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-05T11:32:26.934Z",
-  "generated_at_fr": "05/08 11h32",
+  "generated_at": "2026-08-06T11:35:27.160Z",
+  "generated_at_fr": "06/08 11h35",
   "pdl": "2325••••••••••",
   "contract": {
     "offpeak_hours": "HC (1H02-6H02;14H02-17H02)",
@@ -21,14 +21,14 @@
     }
   ],
   "last_known_day": {
-    "date": "2026-08-04",
-    "date_fr": "4 août",
-    "weekday_fr": "mar",
-    "kwh": 22.047,
+    "date": "2026-08-05",
+    "date_fr": "5 août",
+    "weekday_fr": "mer",
+    "kwh": 22.258,
     "lag_days": 1
   },
   "yesterday": {
-    "kwh": 25.829
+    "kwh": 22.047
   },
   "last_known_power": {
     "watts": 868,
@@ -42,16 +42,9 @@
   },
   "daily_data_cache": null,
   "week": {
-    "total_kwh": 164.61,
-    "avg_kwh_per_day": 23.51,
+    "total_kwh": 161.62,
+    "avg_kwh_per_day": 23.09,
     "series": [
-      {
-        "date": "2026-07-29",
-        "date_fr": "29 juil",
-        "date_ddmm": "29/07",
-        "weekday_fr": "mer",
-        "kwh": 25.246
-      },
       {
         "date": "2026-07-30",
         "date_fr": "30 juil",
@@ -93,12 +86,19 @@
         "date_ddmm": "04/08",
         "weekday_fr": "mar",
         "kwh": 22.047
+      },
+      {
+        "date": "2026-08-05",
+        "date_fr": "5 août",
+        "date_ddmm": "05/08",
+        "weekday_fr": "mer",
+        "kwh": 22.258
       }
     ]
   },
   "month": {
-    "total_kwh": 669.65,
-    "avg_kwh_per_day": 22.32,
+    "total_kwh": 672.45,
+    "avg_kwh_per_day": 22.41,
     "max_day": {
       "date": "2026-07-15",
       "date_fr": "15 juil",
@@ -114,13 +114,6 @@
       "kwh": 12.395
     },
     "series": [
-      {
-        "date": "2026-07-06",
-        "date_fr": "6 juil",
-        "date_ddmm": "06/07",
-        "weekday_fr": "lun",
-        "kwh": 19.464
-      },
       {
         "date": "2026-07-07",
         "date_fr": "7 juil",
@@ -323,6 +316,13 @@
         "date_ddmm": "04/08",
         "weekday_fr": "mar",
         "kwh": 22.047
+      },
+      {
+        "date": "2026-08-05",
+        "date_fr": "5 août",
+        "date_ddmm": "05/08",
+        "weekday_fr": "mer",
+        "kwh": 22.258
       }
     ]
   },
@@ -332,16 +332,21 @@
     "hp_kwh": 233.71,
     "hc_pct": 27.8
   },
-  "load_curve_cache": null,
+  "load_curve_cache": {
+    "stale": true,
+    "reason": "quota",
+    "cached_at": "2026-08-05T11:32:26.934Z",
+    "cached_at_fr": "05/08 11h32"
+  },
   "estimated_bill": {
     "source": "measured",
     "period_days": 30,
-    "hp_kwh": 483.49,
-    "hc_kwh": 186.16,
-    "hp_eur": 99.84,
-    "hc_eur": 29.4,
+    "hp_kwh": 485.51,
+    "hc_kwh": 186.94,
+    "hp_eur": 100.26,
+    "hc_eur": 29.52,
     "subscription_eur": 19.2,
-    "total_eur": 148.44
+    "total_eur": 148.98
   },
   "load_curve_48h": [
     {
@@ -3526,142 +3531,142 @@
       "bars": [
         {
           "x": 0,
-          "y": 14,
-          "w": 49,
-          "h": 76,
-          "cx": 25,
-          "value": 21.785,
-          "label": "22/07",
-          "highlight": false
-        },
-        {
-          "x": 55,
           "y": 28,
           "w": 49,
           "h": 62,
-          "cx": 80,
+          "cx": 25,
           "value": 17.776,
           "label": "23/07",
           "highlight": false
         },
         {
-          "x": 109,
+          "x": 55,
           "y": 4,
           "w": 49,
           "h": 86,
-          "cx": 134,
+          "cx": 80,
           "value": 24.774,
           "label": "24/07",
           "highlight": false
         },
         {
-          "x": 164,
+          "x": 109,
           "y": 26,
           "w": 49,
           "h": 64,
-          "cx": 189,
+          "cx": 134,
           "value": 18.369,
           "label": "25/07",
           "highlight": false
         },
         {
-          "x": 219,
+          "x": 164,
           "y": 47,
           "w": 49,
           "h": 43,
-          "cx": 244,
+          "cx": 189,
           "value": 12.395,
           "label": "26/07",
           "highlight": false
         },
         {
-          "x": 274,
+          "x": 219,
           "y": 33,
           "w": 49,
           "h": 57,
-          "cx": 299,
+          "cx": 244,
           "value": 16.498,
           "label": "27/07",
           "highlight": false
         },
         {
-          "x": 328,
+          "x": 274,
           "y": 32,
           "w": 49,
           "h": 58,
-          "cx": 353,
+          "cx": 299,
           "value": 16.563,
           "label": "28/07",
           "highlight": false
         },
         {
-          "x": 383,
+          "x": 328,
           "y": 2,
           "w": 49,
           "h": 88,
-          "cx": 408,
+          "cx": 353,
           "value": 25.246,
           "label": "29/07",
           "highlight": false
         },
         {
-          "x": 438,
+          "x": 383,
           "y": 14,
           "w": 49,
           "h": 76,
-          "cx": 463,
+          "cx": 408,
           "value": 21.72,
           "label": "30/07",
           "highlight": false
         },
         {
-          "x": 492,
+          "x": 438,
           "y": 18,
           "w": 49,
           "h": 72,
-          "cx": 517,
+          "cx": 463,
           "value": 20.576,
           "label": "31/07",
           "highlight": false
         },
         {
-          "x": 547,
+          "x": 492,
           "y": 6,
           "w": 49,
           "h": 84,
-          "cx": 572,
+          "cx": 517,
           "value": 24.06,
           "label": "01/08",
           "highlight": false
         },
         {
-          "x": 602,
+          "x": 547,
           "y": 2,
           "w": 49,
           "h": 88,
-          "cx": 627,
+          "cx": 572,
           "value": 25.127,
           "label": "02/08",
           "highlight": false
         },
         {
-          "x": 657,
+          "x": 602,
           "y": 0,
           "w": 49,
           "h": 90,
-          "cx": 682,
+          "cx": 627,
           "value": 25.829,
           "label": "03/08",
           "highlight": true
         },
         {
-          "x": 711,
+          "x": 657,
           "y": 13,
           "w": 49,
           "h": 77,
-          "cx": 736,
+          "cx": 682,
           "value": 22.047,
           "label": "04/08",
+          "highlight": false
+        },
+        {
+          "x": 711,
+          "y": 12,
+          "w": 49,
+          "h": 78,
+          "cx": 736,
+          "value": 22.258,
+          "label": "05/08",
           "highlight": false
         }
       ],
@@ -3787,45 +3792,45 @@
     "hdd_base": 18,
     "cdd_base": 24,
     "heat_kwh": 0,
-    "cool_kwh": 133.4,
-    "base_kwh": 536.2,
+    "cool_kwh": 136.3,
+    "base_kwh": 536.1,
     "eur_per_degree_heat": 0,
     "status_label": "Normale",
-    "status_z": 0.8,
+    "status_z": 0.4,
     "forecast": [
-      {
-        "date_ddmm": "06/08",
-        "temp": 24.8,
-        "kwh": 19.1,
-        "eur": 3.94
-      },
       {
         "date_ddmm": "07/08",
         "temp": 25.2,
         "kwh": 19.7,
-        "eur": 4.06
+        "eur": 4.08
       },
       {
         "date_ddmm": "08/08",
-        "temp": 28,
-        "kwh": 23.8,
-        "eur": 4.92
+        "temp": 27.6,
+        "kwh": 23.5,
+        "eur": 4.85
       },
       {
         "date_ddmm": "09/08",
-        "temp": 24.2,
-        "kwh": 18.2,
-        "eur": 3.75
+        "temp": 27.9,
+        "kwh": 23.9,
+        "eur": 4.94
       },
       {
         "date_ddmm": "10/08",
+        "temp": 25.9,
+        "kwh": 20.8,
+        "eur": 4.3
+      },
+      {
+        "date_ddmm": "11/08",
         "temp": 26.1,
-        "kwh": 21,
-        "eur": 4.33
+        "kwh": 21.1,
+        "eur": 4.36
       }
     ],
-    "forecast_total_kwh": 101.8,
-    "forecast_total_eur": 21,
+    "forecast_total_kwh": 109,
+    "forecast_total_eur": 22.53,
     "n_days": 30
   }
 }
