@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-07T10:14:23.017Z",
-  "generated_at_fr": "07/08 10h14",
+  "generated_at": "2026-08-08T09:57:29.301Z",
+  "generated_at_fr": "08/08 09h57",
   "pdl": "2325••••••••••",
   "contract": {
     "offpeak_hours": "HC (1H02-6H02;14H02-17H02)",
@@ -40,7 +40,11 @@
     "date_fr": "15 juil",
     "watts": 6330
   },
-  "daily_data_cache": null,
+  "daily_data_cache": {
+    "stale": true,
+    "cached_at": "2026-08-07T10:14:23.017Z",
+    "cached_at_fr": "07/08 10h14"
+  },
   "week": {
     "total_kwh": 162.45,
     "avg_kwh_per_day": 23.21,
@@ -332,7 +336,12 @@
     "hp_kwh": 284.58,
     "hc_pct": 28.2
   },
-  "load_curve_cache": null,
+  "load_curve_cache": {
+    "stale": true,
+    "reason": "quota",
+    "cached_at": "2026-08-07T10:14:23.017Z",
+    "cached_at_fr": "07/08 10h14"
+  },
   "estimated_bill": {
     "source": "measured",
     "period_days": 30,
@@ -4350,38 +4359,38 @@
     "status_z": 0.8,
     "forecast": [
       {
-        "date_ddmm": "08/08",
-        "temp": 27.5,
-        "kwh": 23.7,
-        "eur": 4.89
-      },
-      {
         "date_ddmm": "09/08",
-        "temp": 28.2,
-        "kwh": 24.9,
-        "eur": 5.14
+        "temp": 29.6,
+        "kwh": 27.3,
+        "eur": 5.63
       },
       {
         "date_ddmm": "10/08",
-        "temp": 24.6,
-        "kwh": 18.7,
-        "eur": 3.87
+        "temp": 26.7,
+        "kwh": 22.3,
+        "eur": 4.61
       },
       {
         "date_ddmm": "11/08",
-        "temp": 25.8,
-        "kwh": 20.8,
-        "eur": 4.29
+        "temp": 27.4,
+        "kwh": 23.5,
+        "eur": 4.85
       },
       {
         "date_ddmm": "12/08",
-        "temp": 28.2,
-        "kwh": 24.9,
-        "eur": 5.14
+        "temp": 28.8,
+        "kwh": 25.9,
+        "eur": 5.35
+      },
+      {
+        "date_ddmm": "13/08",
+        "temp": 30.5,
+        "kwh": 28.8,
+        "eur": 5.95
       }
     ],
-    "forecast_total_kwh": 113,
-    "forecast_total_eur": 23.33,
+    "forecast_total_kwh": 127.8,
+    "forecast_total_eur": 26.39,
     "n_days": 30
   }
 }
