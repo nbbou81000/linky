@@ -1,25 +1,10 @@
 {
-  "generated_at": "2026-09-28T17:42:15.979Z",
-  "generated_at_fr": "28/09 17h42",
+  "generated_at": "2026-09-29T16:03:16.836Z",
+  "generated_at_fr": "29/09 16h03",
   "pdl": "2325••••••••••",
-  "contract": {
-    "offpeak_hours": "HC (1H02-6H02;14H02-17H02)",
-    "subscribed_power": "9 kVA"
-  },
-  "address": {
-    "city": "CAGNAC LES MINES",
-    "postal_code": "81130"
-  },
-  "offpeak_ranges": [
-    {
-      "startMin": 62,
-      "endMin": 362
-    },
-    {
-      "startMin": 842,
-      "endMin": 1022
-    }
-  ],
+  "contract": null,
+  "address": null,
+  "offpeak_ranges": [],
   "last_known_day": {
     "date": "2026-09-27",
     "date_fr": "27 sept",
@@ -40,7 +25,11 @@
     "date_fr": "19 sept",
     "watts": 4350
   },
-  "daily_data_cache": null,
+  "daily_data_cache": {
+    "stale": true,
+    "cached_at": "2026-09-28T17:42:15.979Z",
+    "cached_at_fr": "28/09 17h42"
+  },
   "week": {
     "total_kwh": 95.81,
     "avg_kwh_per_day": 13.69,
@@ -334,9 +323,9 @@
   },
   "load_curve_cache": {
     "stale": true,
-    "reason": "quota",
-    "cached_at": "2026-09-27T14:44:08.041Z",
-    "cached_at_fr": "27/09 14h44"
+    "reason": "no_data",
+    "cached_at": "2026-09-28T17:42:15.979Z",
+    "cached_at_fr": "28/09 17h42"
   },
   "estimated_bill": {
     "source": "measured",
