@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-26T13:14:49.400Z",
-  "generated_at_fr": "26/10 13h14",
+  "generated_at": "2026-10-26T16:11:07.845Z",
+  "generated_at_fr": "26/10 16h11",
   "pdl": "2325••••••••••",
   "contract": {
     "offpeak_hours": "HC (1H02-6H02;14H02-17H02)",
@@ -6746,46 +6746,46 @@
   "weather_insight": {
     "hdd_base": 18,
     "cdd_base": 24,
-    "heat_kwh": 66.3,
+    "heat_kwh": 65.7,
     "cool_kwh": 0,
-    "base_kwh": 370.8,
+    "base_kwh": 371.4,
     "eur_per_degree_heat": 0.16,
     "status_label": "Normale",
     "status_z": 0.8,
     "forecast": [
       {
         "date_ddmm": "27/10",
-        "temp": 15.7,
-        "kwh": 14.2,
-        "eur": 2.93
+        "temp": 15.8,
+        "kwh": 14.1,
+        "eur": 2.91
       },
       {
         "date_ddmm": "28/10",
-        "temp": 11.7,
-        "kwh": 17.3,
-        "eur": 3.58
+        "temp": 12,
+        "kwh": 17.1,
+        "eur": 3.53
       },
       {
         "date_ddmm": "29/10",
-        "temp": 9.3,
-        "kwh": 19.2,
-        "eur": 3.97
+        "temp": 9.7,
+        "kwh": 18.9,
+        "eur": 3.9
       },
       {
         "date_ddmm": "30/10",
-        "temp": 9.3,
-        "kwh": 19.2,
-        "eur": 3.97
+        "temp": 8.9,
+        "kwh": 19.5,
+        "eur": 4.03
       },
       {
         "date_ddmm": "31/10",
-        "temp": 7.7,
-        "kwh": 20.5,
-        "eur": 4.23
+        "temp": 8.5,
+        "kwh": 19.8,
+        "eur": 4.09
       }
     ],
-    "forecast_total_kwh": 90.4,
-    "forecast_total_eur": 18.68,
+    "forecast_total_kwh": 89.4,
+    "forecast_total_eur": 18.46,
     "n_days": 30
   }
 }
