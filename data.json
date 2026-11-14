@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-13T17:16:17.623Z",
-  "generated_at_fr": "13/11 17h16",
+  "generated_at": "2026-11-14T15:52:10.364Z",
+  "generated_at_fr": "14/11 15h52",
   "pdl": "2325••••••••••",
   "contract": {
     "offpeak_hours": "HC (1H02-6H02;14H02-17H02)",
@@ -40,7 +40,11 @@
     "date_fr": "1 nov",
     "watts": 6740
   },
-  "daily_data_cache": null,
+  "daily_data_cache": {
+    "stale": true,
+    "cached_at": "2026-11-13T17:16:17.623Z",
+    "cached_at_fr": "13/11 17h16"
+  },
   "week": {
     "total_kwh": 130.57,
     "avg_kwh_per_day": 18.65,
@@ -332,7 +336,12 @@
     "hp_kwh": 421.26,
     "hc_pct": 28
   },
-  "load_curve_cache": null,
+  "load_curve_cache": {
+    "stale": true,
+    "reason": "quota",
+    "cached_at": "2026-11-13T17:16:17.623Z",
+    "cached_at_fr": "13/11 17h16"
+  },
   "estimated_bill": {
     "source": "measured",
     "period_days": 30,
@@ -6754,38 +6763,38 @@
     "status_z": -0.5,
     "forecast": [
       {
-        "date_ddmm": "14/11",
-        "temp": 8.9,
-        "kwh": 24,
-        "eur": 4.96
-      },
-      {
         "date_ddmm": "15/11",
-        "temp": 12.2,
-        "kwh": 18.8,
-        "eur": 3.89
+        "temp": 11.8,
+        "kwh": 19.5,
+        "eur": 4.02
       },
       {
         "date_ddmm": "16/11",
-        "temp": 11.3,
-        "kwh": 20.2,
-        "eur": 4.18
+        "temp": 11.5,
+        "kwh": 19.9,
+        "eur": 4.12
       },
       {
         "date_ddmm": "17/11",
-        "temp": 12.5,
-        "kwh": 18.4,
-        "eur": 3.79
+        "temp": 12.4,
+        "kwh": 18.5,
+        "eur": 3.83
       },
       {
         "date_ddmm": "18/11",
-        "temp": 12.9,
-        "kwh": 17.7,
-        "eur": 3.66
+        "temp": 12.6,
+        "kwh": 18.2,
+        "eur": 3.76
+      },
+      {
+        "date_ddmm": "19/11",
+        "temp": 10.9,
+        "kwh": 20.9,
+        "eur": 4.31
       }
     ],
-    "forecast_total_kwh": 99.1,
-    "forecast_total_eur": 20.48,
+    "forecast_total_kwh": 97,
+    "forecast_total_eur": 20.04,
     "n_days": 30
   }
 }
